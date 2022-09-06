@@ -34,6 +34,9 @@ const (
 	SSPI        // 7
 )
 
+// This should be in the above list of types but is separated to avoid conflicts with Gitea changes
+const F3 Type = 129
+
 // String returns the string name of the LoginType
 func (typ Type) String() string {
 	return Names[typ]
@@ -52,6 +55,7 @@ var Names = map[Type]string{
 	PAM:    "PAM",
 	OAuth2: "OAuth2",
 	SSPI:   "SPNEGO with SSPI",
+	F3:     "F3",
 }
 
 // Config represents login config as far as the db is concerned
@@ -178,6 +182,10 @@ func (source *Source) IsOAuth2() bool {
 // IsSSPI returns true of this source is of the SSPI type.
 func (source *Source) IsSSPI() bool {
 	return source.Type == SSPI
+}
+
+func (source *Source) IsF3() bool {
+	return source.Type == F3
 }
 
 // HasTLS returns true of this source supports TLS.

@@ -130,6 +130,7 @@ func NewMainApp(version, versionExtra string) *cli.App {
 
 	var subCmdsStandalone []*cli.Command = make([]*cli.Command, 0, 10)
 	var subCmdWithConfig []*cli.Command = make([]*cli.Command, 0, 10)
+	var globalFlags []cli.Flag = make([]cli.Flag, 0, 10)
 
 	//
 	// If the executable is forgejo-cli, provide a Forgejo specific CLI
@@ -137,6 +138,18 @@ func NewMainApp(version, versionExtra string) *cli.App {
 	//
 	if executable == "forgejo-cli" {
 		subCmdsStandalone = append(subCmdsStandalone, forgejo.CmdActions(context.Background()))
+		subCmdWithConfig = append(subCmdWithConfig, forgejo.CmdF3(context.Background()))
+		globalFlags = append(globalFlags, []cli.Flag{
+			&cli.BoolFlag{
+				Name: "quiet",
+			},
+			&cli.BoolFlag{
+				Name: "verbose",
+			},
+			&cli.BoolFlag{
+				Name: "debug",
+			},
+		}...)
 	} else {
 		//
 		// Otherwise provide a Gitea compatible CLI which includes Forgejo
@@ -148,10 +161,10 @@ func NewMainApp(version, versionExtra string) *cli.App {
 		subCmdWithConfig = append(subCmdWithConfig, CmdActions)
 	}
 
-	return innerNewMainApp(version, versionExtra, subCmdsStandalone, subCmdWithConfig)
+	return innerNewMainApp(version, versionExtra, subCmdsStandalone, subCmdWithConfig, globalFlags)
 }
 
-func innerNewMainApp(version, versionExtra string, subCmdsStandaloneArgs, subCmdWithConfigArgs []*cli.Command) *cli.App {
+func innerNewMainApp(version, versionExtra string, subCmdsStandaloneArgs, subCmdWithConfigArgs []*cli.Command, globalFlagsArgs []cli.Flag) *cli.App {
 	app := cli.NewApp()
 	app.Name = "Gitea"
 	app.Usage = "A painless self-hosted Git service"
@@ -193,6 +206,7 @@ func innerNewMainApp(version, versionExtra string, subCmdsStandaloneArgs, subCmd
 	app.DefaultCommand = CmdWeb.Name
 
 	globalFlags := appGlobalFlags()
+	globalFlags = append(globalFlags, globalFlagsArgs...)
 	app.Flags = append(app.Flags, cli.VersionFlag)
 	app.Flags = append(app.Flags, globalFlags...)
 	app.HideHelp = true // use our own help action to show helps (with more information like default config)

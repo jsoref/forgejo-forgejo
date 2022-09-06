@@ -42,7 +42,11 @@ type SearchUserOptions struct {
 
 func (opts *SearchUserOptions) toSearchQueryBase(ctx context.Context) *xorm.Session {
 	var cond builder.Cond
-	cond = builder.Eq{"type": opts.Type}
+	if opts.Type == UserTypeIndividual {
+		cond = builder.In("type", UserTypeIndividual, UserTypeF3)
+	} else {
+		cond = builder.Eq{"type": opts.Type}
+	}
 	if opts.IncludeReserved {
 		if opts.Type == UserTypeIndividual {
 			cond = cond.Or(builder.Eq{"type": UserTypeUserReserved}).Or(
