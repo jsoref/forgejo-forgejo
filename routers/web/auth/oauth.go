@@ -33,6 +33,7 @@ import (
 	source_service "code.gitea.io/gitea/services/auth/source"
 	"code.gitea.io/gitea/services/auth/source/oauth2"
 	"code.gitea.io/gitea/services/externalaccount"
+	f3_service "code.gitea.io/gitea/services/f3"
 	"code.gitea.io/gitea/services/forms"
 	user_service "code.gitea.io/gitea/services/user"
 
@@ -1206,9 +1207,21 @@ func handleOAuth2SignIn(ctx *context.Context, source *auth.Source, u *user_model
 	ctx.Redirect(setting.AppSubURL + "/user/two_factor")
 }
 
-// OAuth2UserLoginCallback attempts to handle the callback from the OAuth2 provider and if successful
-// login the user
 func oAuth2UserLoginCallback(ctx *context.Context, authSource *auth.Source, request *http.Request, response http.ResponseWriter) (*user_model.User, goth.User, error) {
+	gothUser, err := oAuth2FetchUser(ctx, authSource, request, response)
+	if err != nil {
+		return nil, goth.User{}, err
+	}
+
+	if err := f3_service.MaybePromoteF3User(ctx, authSource, gothUser.UserID, gothUser.Email); err != nil {
+		return nil, goth.User{}, err
+	}
+
+	u, err := oAuth2GothUserToUser(ctx, authSource, gothUser)
+	return u, gothUser, err
+}
+
+func oAuth2FetchUser(ctx *context.Context, authSource *auth.Source, request *http.Request, response http.ResponseWriter) (goth.User, error) {
 	oauth2Source := authSource.Cfg.(*oauth2.Source)
 
 	// Make sure that the response is not an error response.
@@ -1220,10 +1233,10 @@ func oAuth2UserLoginCallback(ctx *context.Context, authSource *auth.Source, requ
 		// Delete the goth session
 		err := gothic.Logout(response, request)
 		if err != nil {
-			return nil, goth.User{}, err
+			return goth.User{}, err
 		}
 
-		return nil, goth.User{}, errCallback{
+		return goth.User{}, errCallback{
 			Code:        errorName,
 			Description: errorDescription,
 		}
@@ -1236,24 +1249,28 @@ func oAuth2UserLoginCallback(ctx *context.Context, authSource *auth.Source, requ
 			log.Error("OAuth2 Provider %s returned too long a token. Current max: %d. Either increase the [OAuth2] MAX_TOKEN_LENGTH or reduce the information returned from the OAuth2 provider", authSource.Name, setting.OAuth2.MaxTokenLength)
 			err = fmt.Errorf("OAuth2 Provider %s returned too long a token. Current max: %d. Either increase the [OAuth2] MAX_TOKEN_LENGTH or reduce the information returned from the OAuth2 provider", authSource.Name, setting.OAuth2.MaxTokenLength)
 		}
-		return nil, goth.User{}, err
+		return goth.User{}, err
 	}
 
 	if oauth2Source.RequiredClaimName != "" {
 		claimInterface, has := gothUser.RawData[oauth2Source.RequiredClaimName]
 		if !has {
-			return nil, goth.User{}, user_model.ErrUserProhibitLogin{Name: gothUser.UserID}
+			return goth.User{}, user_model.ErrUserProhibitLogin{Name: gothUser.UserID}
 		}
 
 		if oauth2Source.RequiredClaimValue != "" {
 			groups := claimValueToStringSet(claimInterface)
 
 			if !groups.Contains(oauth2Source.RequiredClaimValue) {
-				return nil, goth.User{}, user_model.ErrUserProhibitLogin{Name: gothUser.UserID}
+				return goth.User{}, user_model.ErrUserProhibitLogin{Name: gothUser.UserID}
 			}
 		}
 	}
 
+	return gothUser, nil
+}
+
+func oAuth2GothUserToUser(ctx go_context.Context, authSource *auth.Source, gothUser goth.User) (*user_model.User, error) {
 	user := &user_model.User{
 		LoginName:   gothUser.UserID,
 		LoginType:   auth.OAuth2,
@@ -1262,12 +1279,13 @@ func oAuth2UserLoginCallback(ctx *context.Context, authSource *auth.Source, requ
 
 	hasUser, err := user_model.GetUser(ctx, user)
 	if err != nil {
-		return nil, goth.User{}, err
+		return nil, err
 	}
 
 	if hasUser {
-		return user, gothUser, nil
+		return user, nil
 	}
+	log.Debug("no user found for LoginName %v, LoginSource %v, LoginType %v", user.LoginName, user.LoginSource, user.LoginType)
 
 	// search in external linked users
 	externalLoginUser := &user_model.ExternalLoginUser{
@@ -1276,13 +1294,13 @@ func oAuth2UserLoginCallback(ctx *context.Context, authSource *auth.Source, requ
 	}
 	hasUser, err = user_model.GetExternalLogin(request.Context(), externalLoginUser)
 	if err != nil {
-		return nil, goth.User{}, err
+		return nil, err
 	}
 	if hasUser {
-		user, err = user_model.GetUserByID(request.Context(), externalLoginUser.UserID)
-		return user, gothUser, err
+		user, err = user_model.GetUserByID(ctx, externalLoginUser.UserID)
+		return user, err
 	}
 
 	// no user found to login
-	return nil, gothUser, nil
+	return nil, nil
 }

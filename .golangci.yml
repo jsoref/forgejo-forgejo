@@ -104,6 +104,12 @@ issues:
         - gosec
         - unparam
         - staticcheck
+    - path: services/f3/driver/base.go
+      linters:
+        - gosimple
+    - path: services/f3/driver
+      linters:
+        - dupl
     - path: models/migrations/v
       linters:
         - gocyclo

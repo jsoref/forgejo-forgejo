@@ -33,9 +33,14 @@ func CmdForgejo(ctx context.Context) *cli.Command {
 	return &cli.Command{
 		Name:  "forgejo-cli",
 		Usage: "Forgejo CLI",
-		Flags: []cli.Flag{},
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name: "debug",
+			},
+		},
 		Subcommands: []*cli.Command{
 			CmdActions(ctx),
+			CmdF3(ctx),
 		},
 	}
 }
@@ -144,4 +149,26 @@ func handleCliResponseExtra(ctx context.Context, extra private.ResponseExtra) er
 		return extra.Error
 	}
 	return cli.Exit(extra.Error, 1)
+}
+
+func prepareWorkPathAndCustomConf(ctx context.Context) func(c *cli.Context) error {
+	return func(c *cli.Context) error {
+		if !ContextGetNoInit(ctx) {
+			var args setting.ArgWorkPathAndCustomConf
+			// from children to parent, check the global flags
+			for _, curCtx := range c.Lineage() {
+				if curCtx.IsSet("work-path") && args.WorkPath == "" {
+					args.WorkPath = curCtx.String("work-path")
+				}
+				if curCtx.IsSet("custom-path") && args.CustomPath == "" {
+					args.CustomPath = curCtx.String("custom-path")
+				}
+				if curCtx.IsSet("config") && args.CustomConf == "" {
+					args.CustomConf = curCtx.String("config")
+				}
+			}
+			setting.InitWorkPathAndCommonConfig(os.Getenv, args)
+		}
+		return nil
+	}
 }
