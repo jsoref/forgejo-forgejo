@@ -1,0 +1,75 @@
+platform: linux/amd64
+
+when:
+  event: [ push, pull_request, manual ]
+  branch:
+    exclude: [ soft-fork/*/*, soft-fork/*/*/* ]
+
+variables:
+ - &golang_image 'golang:1.20'
+ - &test_image 'codeberg.org/forgejo/test_env:main'
+ - &goproxy_override ''
+ - &goproxy_setup |-
+      if [ -n "$${GOPROXY_OVERRIDE:-}" ]; then
+        export GOPROXY="$${GOPROXY_OVERRIDE}";
+        echo "Using goproxy from goproxy_override \"$${GOPROXY}\"";
+      elif [ -n "$${GOPROXY_DEFAULT:-}" ]; then
+        export GOPROXY="$${GOPROXY_DEFAULT}";
+        echo "Using goproxy from goproxy_default (secret) not displaying";
+      else
+        export GOPROXY="https://proxy.golang.org,direct";
+        echo "No goproxy overrides or defaults given, using \"$${GOPROXY}\"";
+      fi
+
+workspace:
+  base: /go
+  path: src/codeberg/gitea
+
+pipeline:
+  deps-backend:
+    image: *golang_image
+    pull: true
+    environment:
+      GOPROXY_OVERRIDE: *goproxy_override
+    secrets:
+      - goproxy_default
+    commands:
+    - *goproxy_setup
+    - make deps-backend
+
+  security-check:
+    image: *golang_image
+    group: checks
+    pull: true
+    environment:
+      GOPROXY_OVERRIDE: *goproxy_override
+    secrets:
+      - goproxy_default
+    commands:
+    - *goproxy_setup
+    - make security-check
+
+  lint-backend:
+    image: *test_image
+    pull: true
+    group: checks
+    environment:
+      GOPROXY_OVERRIDE: *goproxy_override
+      TAGS: 'bindata sqlite sqlite_unlock_notify'
+      GOSUMDB: 'sum.golang.org'
+    secrets:
+      - goproxy_default
+    commands:
+    - *goproxy_setup
+    - make lint-backend
+
+  checks-backend:
+    image: *test_image
+    group: checks
+    environment:
+      GOPROXY_OVERRIDE: *goproxy_override
+    secrets:
+      - goproxy_default
+    commands:
+    - *goproxy_setup
+    - make --always-make checks-backend

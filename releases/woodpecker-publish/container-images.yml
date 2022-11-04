@@ -1,0 +1,27 @@
+platform: linux/amd64
+
+when:
+  event: tag
+
+variables:
+ - &dind_image 'docker:20.10-dind'
+ - &integration_image 'codeberg.org/forgejo-integration/forgejo'
+ - &verify 'true'
+# for testing purposes
+# - &verify 'false'
+ - &archs 'amd64 arm64'
+
+pipeline:
+
+  publish:
+    image: *dind_image
+    environment:
+      INTEGRATION_IMAGE: *integration_image
+      VERIFY: *verify
+      ARCHS: *archs
+    commands:
+      - ./releases/container-images-pull-verify-push.sh
+    secrets:
+      - releaseteamtoken
+      - releaseteamuser
+      - domain
