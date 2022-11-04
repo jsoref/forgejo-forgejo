@@ -1,0 +1,34 @@
+platform: linux/amd64
+
+when:
+  event: push
+
+variables:
+ - &dind_image 'docker:20.10-dind'
+ - &alpine_image 'alpine:3.17'
+
+pipeline:
+  container-images-pull-verify-push:
+    image: *dind_image
+    group: integration
+    commands:
+# arm64 would require qemu-user-static which is not available on alpline
+# the test coverage does not change much and running the tests test locally
+# is possible if there is a doubt
+      - ARCHS=amd64 ./releases/container-images-pull-verify-push-test.sh test_run
+      - ./releases/container-images-pull-verify-push-test.sh test_teardown
+    secrets:
+      - releaseteamuser
+      - releaseteamtoken
+      - domain
+
+  binaries-pull-push:
+    image: *alpine_image
+    group: integration
+    commands:
+      - ./releases/binaries-pull-push-test.sh test_run
+      - ./releases/binaries-pull-push-test.sh test_teardown
+    secrets:
+      - releaseteamuser
+      - releaseteamtoken
+      - domain
