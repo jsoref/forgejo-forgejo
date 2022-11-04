@@ -1,0 +1,141 @@
+platform: linux/amd64
+
+branches:
+  exclude: [ forgejo-development, main, release/*, soft-fork/*/*, soft-fork/*/*/* ]
+
+depends_on:
+- compliance
+
+variables:
+ - &git_image 'docker:git'
+ - &golang_image 'golang:1.19'
+ - &gitea_test_image 'gitea/test_env:linux-amd64'
+ - &mysql_image 'mysql:8'
+ - &pgsql_image 'postgres:10'
+ - &goproxy_override ''
+ - &goproxy_setup |-
+      if [ -n "$${GOPROXY_OVERRIDE:-}" ]; then
+        export GOPROXY="$${GOPROXY_OVERRIDE}";
+        echo "Using goproxy from goproxy_override \"$${GOPROXY}\"";
+      elif [ -n "$${GOPROXY_DEFAULT:-}" ]; then
+        export GOPROXY="$${GOPROXY_DEFAULT}";
+        echo "Using goproxy from goproxy_default (secret) not displaying";
+      else
+        export GOPROXY="https://proxy.golang.org,direct";
+        echo "No goproxy overrides or defaults given, using \"$${GOPROXY}\"";
+      fi
+
+services:
+  mysql8:
+    image: *mysql_image
+    pull: true
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+      MYSQL_DATABASE: testgitea
+
+  pgsql:
+    image: *pgsql_image
+    pull: true
+    environment:
+      POSTGRES_DB: test
+      POSTGRES_PASSWORD: postgres
+
+workspace:
+  base: /go
+  path: src/codeberg/gitea
+
+pipeline:
+  fetch-tags:
+    image: *git_image
+    pull: true
+    commands:
+    - git config --add safe.directory '*'
+    - git fetch --tags --force
+
+  deps-backend:
+    image: *golang_image
+    pull: true
+    environment:
+      GOPROXY_OVERRIDE: *goproxy_override
+    secrets:
+      - goproxy_default
+    commands:
+    - *goproxy_setup
+    - make deps-backend
+
+  tag-pre-condition:
+    image: *git_image
+    pull: true
+    commands:
+    - git update-ref refs/heads/tag_test ${CI_COMMIT_SHA}
+
+  prepare-test-env:
+    image: *gitea_test_image
+    pull: true
+    commands:
+    - ./build/test-env-prepare.sh
+
+  build:
+    image: *gitea_test_image
+    environment:
+      GOSUMDB: sum.golang.org
+      TAGS: bindata sqlite sqlite_unlock_notify
+      GOPROXY_OVERRIDE: *goproxy_override
+    secrets:
+      - goproxy_default
+    commands:
+    - *goproxy_setup
+    - su gitea -c './build/test-env-check.sh'
+    - su gitea -c 'make backend'
+
+  unit-test:
+    image: *gitea_test_image
+    environment:
+      TAGS: 'bindata sqlite sqlite_unlock_notify'
+      RACE_ENABLED: 'true'
+      GOPROXY_OVERRIDE: *goproxy_override
+    secrets:
+    - github_read_token
+    - goproxy_default
+    commands:
+    - *goproxy_setup
+    - su gitea -c 'make unit-test-coverage test-check'
+
+  test-mysql8:
+    group: integration
+    image: *gitea_test_image
+    commands:
+      - *goproxy_setup
+      - su gitea -c 'timeout -s ABRT 50m make test-mysql8-migration test-mysql8'
+    environment:
+      TAGS: 'bindata'
+      RACE_ENABLED: 'true'
+      USE_REPO_TEST_DIR: '1'
+      GOPROXY_OVERRIDE: *goproxy_override
+    secrets:
+      - goproxy_default
+
+  test-pgsql:
+    group: integration
+    image: *gitea_test_image
+    commands:
+      - *goproxy_setup
+      - su gitea -c 'timeout -s ABRT 50m make test-pgsql-migration test-pgsql'
+    environment:
+      TAGS: 'bindata'
+      RACE_ENABLED: 'true'
+      USE_REPO_TEST_DIR: '1'
+      GOPROXY_OVERRIDE: *goproxy_override
+    secrets:
+      - goproxy_default
+
+  test-sqlite:
+    group: integration
+    image: *gitea_test_image
+    environment:
+    - USE_REPO_TEST_DIR=1
+    - GOPROXY=off
+    - TAGS=bindata gogit sqlite sqlite_unlock_notify
+    - TEST_TAGS=bindata gogit sqlite sqlite_unlock_notify
+    commands:
+    - su gitea -c 'timeout -s ABRT 120m make test-sqlite-migration test-sqlite'
