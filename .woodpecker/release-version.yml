@@ -1,0 +1,111 @@
+platform: linux/amd64
+
+when:
+  event: tag
+
+depends_on:
+- testing-amd64
+
+variables:
+ - &git_image 'docker:git'
+ - &node_image 'node:18'
+ - &golang_image 'golang:1.19'
+ - &gpg_sign_image 'plugins/gpgsign:1'
+ - &xgo_image 'techknowlogick/xgo:go-1.19.x'
+ - &gpg_sign_image 'plugins/gpgsign:1'
+ - &goproxy_override ''
+ - &goproxy_setup |-
+      if [ -n "$${GOPROXY_OVERRIDE:-}" ]; then
+        export GOPROXY="$${GOPROXY_OVERRIDE}";
+        echo "Using goproxy from goproxy_override \"$${GOPROXY}\"";
+      elif [ -n "$${GOPROXY_DEFAULT:-}" ]; then
+        export GOPROXY="$${GOPROXY_DEFAULT}";
+        echo "Using goproxy from goproxy_default (secret) not displaying";
+      else
+        export GOPROXY="https://proxy.golang.org,direct";
+        echo "No goproxy overrides or defaults given, using \"$${GOPROXY}\"";
+      fi
+
+workspace:
+  base: /source
+  path: /
+
+pipeline:
+  fetch-tags:
+    image: *git_image
+    pull: true
+    group: deps
+    commands:
+     - git config --add safe.directory '*'
+     - git fetch --tags --force
+
+  deps-frontend:
+    image: *node_image
+    pull: true
+    group: deps
+    commands:
+      - make deps-frontend
+
+  deps-backend:
+    image: *golang_image
+    pull: true
+    group: deps
+    environment:
+      GOPROXY_OVERRIDE: *goproxy_override
+    secrets:
+      - goproxy_default
+    commands:
+    - *goproxy_setup
+    - make deps-backend
+
+  static:
+    image: *xgo_image
+    pull: true
+    commands:
+      - *goproxy_setup
+      - curl -sL https://deb.nodesource.com/setup_16.x | bash - && apt-get -qqy install nodejs
+      - export PATH=$PATH:$GOPATH/bin
+      - make CI=true LINUX_ARCHS=linux/amd64,linux/arm64,linux/arm-6 release
+    environment:
+      TAGS: 'bindata sqlite sqlite_unlock_notify'
+      DEBIAN_FRONTEND: 'noninteractive'
+      GOPROXY_OVERRIDE: *goproxy_override
+    secrets:
+      - goproxy_default
+
+  verifyruns:
+    image: *golang_image
+    commands:
+      - ./dist/release/forgejo-*-amd64 --version | grep 'built with'
+      - apt-get update
+      - apt-get install -y qemu-user-static
+      - /usr/bin/qemu-aarch64-static ./dist/release/forgejo-*-arm64 --version | grep 'built with'
+      - /usr/bin/qemu-arm-static ./dist/release/forgejo-*-arm-6 --version | grep 'built with'
+
+  gpg-sign:
+    image: *gpg_sign_image
+    pull: true
+    settings:
+      detach_sign: true
+      excludes:
+        - "dist/release/*.sha256"
+      files:
+        - "dist/release/*"
+      key:
+        from_secret: releaseteamgpg
+
+  release:
+    image: *golang_image
+    commands:
+    - curl -sL https://dl.gitea.io/tea/0.9.0/tea-0.9.0-linux-amd64 > /bin/tea && chmod +x /bin/tea
+    - REMOTE=$(echo $CI_REPO_LINK | sed -e 's|.*://||' -e 's|/.*||')
+    - GITEA_SERVER_URL=$CI_REPO_LINK GITEA_SERVER_TOKEN=$RELEASETEAMTOKEN tea login add --name $RELEASETEAMUSER --url $REMOTE
+    - ASSETS=$(ls dist/release/* | sed -e 's/^/-a /')
+    - echo "$${CI_COMMIT_TAG##v}" | grep -qi '\-rc' && export RELEASETYPE="--prerelease" && echo "Uploading as Pre-Release"
+    - echo "$${CI_COMMIT_TAG##v}" | grep -qi '\-test' && export RELEASETYPE="--draft" && echo "Uploading as Draft"
+    - test $${RELEASETYPE+false} || echo "Uploading as Stable"
+    - anchor=$(echo $CI_COMMIT_TAG | sed -e 's/^v//' -e 's/[^a-zA-Z0-9]/-/g')
+    - tea release create $ASSETS --note "See https://codeberg.org/forgejo/forgejo/src/branch/forgejo/RELEASE-NOTES.md#$${anchor}" --tag $CI_COMMIT_TAG --title $CI_COMMIT_TAG $${RELEASETYPE}
+    secrets:
+      - releaseteamtoken
+      - releaseteamuser
