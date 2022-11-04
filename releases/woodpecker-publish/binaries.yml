@@ -1,0 +1,36 @@
+platform: linux/amd64
+
+when:
+  event: tag
+
+variables:
+ - &dind_image 'docker:20.10-dind'
+ - &gpg_sign_image 'plugins/gpgsign:1'
+
+pipeline:
+
+  pull:
+    image: *dind_image
+    commands:
+      - ./releases/binaries-pull-push.sh pull
+
+  gpg-sign:
+    image: *gpg_sign_image
+    pull: true
+    settings:
+      detach_sign: true
+      excludes:
+        - "dist/release/*.sha256"
+      files:
+        - "dist/release/*"
+      key:
+        from_secret: releaseteamgpg
+
+  push:
+    image: *dind_image
+    commands:
+      - ./releases/binaries-pull-push.sh push
+    secrets:
+      - releaseteamtoken
+      - releaseteamuser
+      - domain
