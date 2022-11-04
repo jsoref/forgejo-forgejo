@@ -1,0 +1,107 @@
+platform: linux/amd64
+
+when:
+  event: tag
+  tag: v*
+
+variables:
+ - &node_image 'node:18'
+ - &golang_image 'golang:1.20'
+ - &alpine_image 'alpine:3.18'
+ - &gpg_sign_image 'plugins/gpgsign:1'
+ - &xgo_image 'techknowlogick/xgo:go-1.20.x'
+ - &gpg_sign_image 'plugins/gpgsign:1'
+ - &goproxy_override ''
+ - &goproxy_setup |-
+      if [ -n "$${GOPROXY_OVERRIDE:-}" ]; then
+        export GOPROXY="$${GOPROXY_OVERRIDE}";
+        echo "Using goproxy from goproxy_override \"$${GOPROXY}\"";
+      elif [ -n "$${GOPROXY_DEFAULT:-}" ]; then
+        export GOPROXY="$${GOPROXY_DEFAULT}";
+        echo "Using goproxy from goproxy_default (secret) not displaying";
+      else
+        export GOPROXY="https://proxy.golang.org,direct";
+        echo "No goproxy overrides or defaults given, using \"$${GOPROXY}\"";
+      fi
+
+workspace:
+  base: /source
+  path: /
+
+pipeline:
+  fetch-tags:
+    image: *golang_image
+    pull: true
+    group: deps
+    commands:
+     - git config --add safe.directory '*'
+     - git fetch --tags --force
+
+  deps-frontend:
+    image: *node_image
+    pull: true
+    group: deps
+    commands:
+      - make deps-frontend
+
+  deps-backend:
+    image: *golang_image
+    pull: true
+    group: deps
+    environment:
+      GOPROXY_OVERRIDE: *goproxy_override
+    secrets:
+      - goproxy_default
+    commands:
+    - *goproxy_setup
+    - make deps-backend
+
+  static:
+    image: *xgo_image
+    pull: true
+    commands:
+      - *goproxy_setup
+      - curl -sL https://deb.nodesource.com/setup_16.x | bash - && apt-get -qqy install nodejs
+      - export PATH=$PATH:$GOPATH/bin
+      - make CI=true LINUX_ARCHS=linux/amd64,linux/arm64,linux/arm-6 release
+    environment:
+      TAGS: 'bindata sqlite sqlite_unlock_notify'
+      DEBIAN_FRONTEND: 'noninteractive'
+      GOPROXY_OVERRIDE: *goproxy_override
+    secrets:
+      - goproxy_default
+
+  #
+  # See https://codeberg.org/forgejo/forgejo/issues/230 for a discussion on this
+  # compilation stage. The goal is just to verify the build does not break, not that
+  # the binary produced actually works.
+  #
+  freebsd:
+    image: *xgo_image
+    group: build
+    commands:
+      - *goproxy_setup
+      - export PATH=$PATH:$GOPATH/bin
+      - make CI=false release-freebsd
+    environment:
+      TAGS: 'bindata sqlite sqlite_unlock_notify'
+      GOPROXY_OVERRIDE: *goproxy_override
+    secrets:
+      - goproxy_default
+
+  verifyruns:
+    image: *golang_image
+    commands:
+      - ./dist/release/forgejo-*-amd64 --version | grep 'built with'
+      - apt-get update
+      - apt-get install -y qemu-user-static
+      - /usr/bin/qemu-aarch64-static ./dist/release/forgejo-*-arm64 --version | grep 'built with'
+      - /usr/bin/qemu-arm-static ./dist/release/forgejo-*-arm-6 --version | grep 'built with'
+
+  push-integration:
+    image: *alpine_image
+    commands:
+      - PUSH_USER=$CI_REPO_OWNER releases/binaries-pull-push.sh push
+    secrets:
+      - releaseteamtoken
+      - releaseteamuser
