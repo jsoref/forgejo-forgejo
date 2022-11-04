@@ -1,0 +1,65 @@
+platform: linux/amd64
+
+when:
+  event: tag
+  tag: v*
+
+variables:
+ - &golang_image 'golang:1.20'
+ - &dind_image 'docker:20.10-dind'
+ - &buildx_image 'woodpeckerci/plugin-docker-buildx:2.0.0'
+ - &integration_image 'codeberg.org/forgejo-integration/forgejo'
+ - &dockerfile_root 'Dockerfile'
+# for testing purposes
+# - &dockerfile_root 'releases/Dockerfile'
+ - &dockerfile_rootless 'Dockerfile.rootless'
+# for testing purposes
+# - &dockerfile_rootless 'releases/Dockerfile-rootless'
+ - &verify 'true'
+# for testing purposes
+# - &verify 'false'
+ - &archs 'amd64 arm64'
+
+pipeline:
+  fetch-tags:
+    image: *golang_image
+    pull: true
+    commands:
+     - git config --add safe.directory '*'
+     - git fetch --tags --force
+
+  build-root:
+    image: *buildx_image
+    group: integration
+    pull: true
+    settings:
+      platforms: linux/amd64,linux/arm64
+      dockerfile: *dockerfile_root
+      registry:
+        from_secret: domain
+      tag: ${CI_COMMIT_TAG##v}
+      repo: *integration_image
+      build_args:
+        - GOPROXY=https://proxy.golang.org
+      password:
+        from_secret: releaseteamtoken
+      username:
+        from_secret: releaseteamuser
+
+  build-rootless:
+    image: *buildx_image
+    group: integration
+    pull: true
+    settings:
+      platforms: linux/amd64,linux/arm64
+      dockerfile: *dockerfile_rootless
+      registry:
+        from_secret: domain
+      tag: ${CI_COMMIT_TAG##v}-rootless
+      repo: *integration_image
+      build_args:
+        - GOPROXY=https://proxy.golang.org
+      password:
+        from_secret: releaseteamtoken
+      username:
+        from_secret: releaseteamuser
