@@ -52,12 +52,12 @@ pipeline:
     commands:
     - su gitea -c 'make unit-test-coverage test-check'
 
-  test-sqlite:
-    image: gitea/test_env:linux-amd64
-    environment:
-    - USE_REPO_TEST_DIR=1
-    - GOPROXY=off
-    - TAGS=bindata gogit sqlite sqlite_unlock_notify
-    - TEST_TAGS=bindata gogit sqlite sqlite_unlock_notify
-    commands:
-    - su gitea -c 'timeout -s ABRT 120m make test-sqlite-migration test-sqlite'
+  # test-sqlite:
+  #   image: gitea/test_env:linux-amd64
+  #   environment:
+  #   - USE_REPO_TEST_DIR=1
+  #   - GOPROXY=off
+  #   - TAGS=bindata gogit sqlite sqlite_unlock_notify
+  #   - TEST_TAGS=bindata gogit sqlite sqlite_unlock_notify
+  #   commands:
+  #   - su gitea -c 'timeout -s ABRT 120m make test-sqlite-migration test-sqlite'
