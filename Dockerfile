@@ -24,7 +24,7 @@ RUN if [ -n "${GITEA_VERSION}" ]; then git checkout "${GITEA_VERSION}"; fi \
 RUN go build contrib/environment-to-ini/environment-to-ini.go
 
 FROM docker.io/library/alpine:3.17
-LABEL maintainer="maintainers@gitea.io"
+LABEL maintainer="contact@forgejo.org"
 
 EXPOSE 22 3000
 
