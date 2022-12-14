@@ -796,9 +796,13 @@ generate: generate-backend
 generate-backend: $(TAGS_PREREQ) generate-go
 
 .PHONY: generate-go
-generate-go: $(TAGS_PREREQ)
+generate-go: $(TAGS_PREREQ) merge-locales
 	@echo "Running go generate..."
 	@CC= GOOS= GOARCH= $(GO) generate -tags '$(TAGS)' $(GO_PACKAGES)
+
+.PHONY: merge-locales
+merge-locales:
+	@CC= GOOS= GOARCH= $(GO) run build/merge-forgejo-locales.go
 
 .PHONY: security-check
 security-check:
@@ -972,13 +976,7 @@ lockfile-check:
 
 .PHONY: update-translations
 update-translations:
-	mkdir -p ./translations
-	cd ./translations && curl -L https://crowdin.com/download/project/gitea.zip > gitea.zip && unzip gitea.zip
-	rm ./translations/gitea.zip
-	$(SED_INPLACE) -e 's/="/=/g' -e 's/"$$//g' ./translations/*.ini
-	$(SED_INPLACE) -e 's/\\"/"/g' ./translations/*.ini
-	mv ./translations/*.ini ./options/locale/
-	rmdir ./translations
+	# noop to detect merge conflicts (potentially needs updating the scripts) and avoid breaking with Gitea
 
 .PHONY: generate-license
 generate-license:
