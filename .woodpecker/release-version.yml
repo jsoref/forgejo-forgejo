@@ -3,9 +3,6 @@ platform: linux/amd64
 branches:
   exclude: [ main, release/*, soft-fork/*/*, soft-fork/*/*/*, doc-* ]
 
-depends_on:
-- testing-amd64
-
 workspace:
   base: /source
   path: /
