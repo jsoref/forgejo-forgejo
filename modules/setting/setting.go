@@ -663,7 +663,7 @@ func loadFromConf(allowEmpty bool, extraConfig string) {
 	forcePathSeparator(LogRootPath)
 
 	sec := Cfg.Section("server")
-	AppName = Cfg.Section("").Key("APP_NAME").MustString("Gitea: Git with a cup of tea")
+	AppName = Cfg.Section("").Key("APP_NAME").MustString("Forgejo: Beyond coding. We Forge.")
 
 	Domain = sec.Key("DOMAIN").MustString("localhost")
 	HTTPAddr = sec.Key("HTTP_ADDR").MustString("0.0.0.0")
