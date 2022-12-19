@@ -12,10 +12,13 @@ variables:
  - &buildx_image 'woodpeckerci/plugin-docker-buildx:2.0.0'
  - &integration_image 'codeberg.org/forgejo-integration/forgejo'
  - &dockerfile_root 'Dockerfile'
+# for testing purposes
 # - &dockerfile_root 'releases/Dockerfile'
  - &dockerfile_rootless 'Dockerfile.rootless'
+# for testing purposes
 # - &dockerfile_rootless 'releases/Dockerfile-rootless'
  - &verify 'true'
+# for testing purposes
 # - &verify 'false'
  - &archs 'amd64 arm64'
 
@@ -27,7 +30,7 @@ pipeline:
      - git config --add safe.directory '*'
      - git fetch --tags --force
 
-  publish-root:
+  build-root:
     image: *buildx_image
     group: integration
     pull: true
@@ -45,7 +48,7 @@ pipeline:
       username:
         from_secret: releaseteamuser
 
-  publish-rootless:
+  build-rootless:
     image: *buildx_image
     group: integration
     pull: true
