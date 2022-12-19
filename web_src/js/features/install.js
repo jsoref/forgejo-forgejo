@@ -5,8 +5,8 @@ export function initInstall() {
     return;
   }
 
-  const defaultDbUser = 'gitea';
-  const defaultDbName = 'gitea';
+  const defaultDbUser = 'forgejo';
+  const defaultDbName = 'forgejo';
 
   const defaultDbHosts = {
     mysql: '127.0.0.1:3306',
