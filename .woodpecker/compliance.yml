@@ -35,18 +35,6 @@ pipeline:
     - *goproxy_setup
     - make deps-backend
 
-  security-check:
-    image: *golang_image
-    group: checks
-    pull: true
-    environment:
-      GOPROXY_OVERRIDE: *goproxy_override
-    secrets:
-      - goproxy_default
-    commands:
-    - *goproxy_setup
-    - make security-check
-
   lint-backend:
     image: *gitea_test_image
     group: checks
