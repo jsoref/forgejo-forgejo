@@ -1,0 +1,4 @@
+@import "theme-forgejo-light.css";
+@media (prefers-color-scheme: dark) {
+  @import "theme-forgejo-dark.css";
+}
