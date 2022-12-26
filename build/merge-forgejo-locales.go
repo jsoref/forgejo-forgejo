@@ -45,8 +45,18 @@ func renameGiteaForgejo(filename string) []byte {
 		line := scanner.Text()
 		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
 			out = append(out, []byte("\n"+line+"\n")...)
-		} else if strings.Contains(line, "Gitea") {
-			out = append(out, []byte(strings.Replace(line, "Gitea", "Forgejo", -1)+"\n")...)
+		} else {
+			out = append(out, []byte(strings.NewReplacer(
+				"Gitea", "Forgejo",
+				"https://docs.gitea.io/en-us/install-from-binary/", "https://forgejo.org/download",
+				"https://github.com/go-gitea/gitea/tree/master/docker", "https://forgejo.org/download",
+				"https://docs.gitea.io/en-us/install-from-package/", "https://forgejo.org/download",
+				"https://code.gitea.io/gitea", "https://forgejo.org/download",
+				"code.gitea.io/gitea", "Forgejo",
+				`<a href="https://github.com/go-gitea/gitea/issues" target="_blank">GitHub</a>`, `<a href="https://codeberg.org/forgejo/forgejo/issues" target="_blank">Codeberg</a>`,
+				"https://github.com/go-gitea/gitea", "https://codeberg.org/forgejo/forgejo",
+				"https://blog.gitea.io", "https://forgejo.org/news",
+			).Replace(line)+"\n")...)
 		}
 	}
 	file.Close()
