@@ -286,11 +286,11 @@ var (
 		ReactionMaxUserNum:  10,
 		ThemeColorMetaTag:   `#6cc644`,
 		MaxDisplayFileSize:  8388608,
-		DefaultTheme:        `auto`,
-		Themes:              []string{`auto`, `gitea`, `arc-green`},
+		DefaultTheme:        `forgejo-auto`,
+		Themes:              []string{`forgejo-auto`, `forgejo-light`, `forgejo-dark`, `auto`, `gitea`, `arc-green`},
 		Reactions:           []string{`+1`, `-1`, `laugh`, `hooray`, `confused`, `heart`, `rocket`, `eyes`},
-		CustomEmojis:        []string{`git`, `gitea`, `codeberg`, `gitlab`, `github`, `gogs`},
-		CustomEmojisMap:     map[string]string{"git": ":git:", "gitea": ":gitea:", "codeberg": ":codeberg:", "gitlab": ":gitlab:", "github": ":github:", "gogs": ":gogs:"},
+		CustomEmojis:        []string{`git`, `gitea`, `codeberg`, `gitlab`, `github`, `gogs`, `forgejo`},
+		CustomEmojisMap:     map[string]string{"git": ":git:", "gitea": ":gitea:", "codeberg": ":codeberg:", "gitlab": ":gitlab:", "github": ":github:", "gogs": ":gogs:", "forgejo": ":forgejo:"},
 		Notification: struct {
 			MinTimeout            time.Duration
 			TimeoutStep           time.Duration
@@ -662,7 +662,7 @@ func loadFromConf(allowEmpty bool, extraConfig string) {
 	forcePathSeparator(LogRootPath)
 
 	sec := Cfg.Section("server")
-	AppName = Cfg.Section("").Key("APP_NAME").MustString("Gitea: Git with a cup of tea")
+	AppName = Cfg.Section("").Key("APP_NAME").MustString("Forgejo: Beyond coding. We Forge.")
 
 	Domain = sec.Key("DOMAIN").MustString("localhost")
 	HTTPAddr = sec.Key("HTTP_ADDR").MustString("0.0.0.0")
