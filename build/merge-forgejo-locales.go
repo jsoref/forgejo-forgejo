@@ -48,8 +48,8 @@ func renameGiteaForgejo(filename string) []byte {
 		} else {
 			out = append(out, []byte(strings.NewReplacer(
 				"Gitea", "Forgejo",
-				"https://docs.gitea.io/en-us/install-from-binary/", "https://forgejo.org/download",
-				"https://github.com/go-gitea/gitea/tree/master/docker", "https://forgejo.org/download",
+				"https://docs.gitea.io/en-us/install-from-binary/", "https://forgejo.org/download/#installation-from-binary",
+				"https://github.com/go-gitea/gitea/tree/master/docker", "https://forgejo.org/download/#container-image",
 				"https://docs.gitea.io/en-us/install-from-package/", "https://forgejo.org/download",
 				"https://code.gitea.io/gitea", "https://forgejo.org/download",
 				"code.gitea.io/gitea", "Forgejo",
@@ -69,7 +69,9 @@ func main() {
 	var localeFile *ini.File
 	for _, locale := range locales {
 		giteaLocale := sourceFolder + "gitea_" + locale
-		localeFile, err = ini.Load(giteaLocale, renameGiteaForgejo(giteaLocale))
+		localeFile, err = ini.LoadSources(ini.LoadOptions{
+			IgnoreInlineComment: true,
+		}, giteaLocale, renameGiteaForgejo(giteaLocale))
 		if err != nil {
 			panic(err)
 		}
