@@ -3,9 +3,6 @@ platform: linux/amd64
 when:
   event: tag
 
-depends_on:
-- testing-amd64
-
 variables:
  - &git_image 'docker:git'
  - &dind_image 'docker:20.10-dind'
