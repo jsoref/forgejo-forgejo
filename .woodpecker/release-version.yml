@@ -4,7 +4,7 @@ when:
   event: tag
 
 depends_on:
-- testing-amd64
+- docker-release-version
 
 variables:
  - &git_image 'docker:git'
