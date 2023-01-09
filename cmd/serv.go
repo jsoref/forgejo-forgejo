@@ -171,13 +171,13 @@ func runServ(c *cli.Context) error {
 		}
 		switch key.Type {
 		case asymkey_model.KeyTypeDeploy:
-			println("Hi there! You've successfully authenticated with the deploy key named " + key.Name + ", but Gitea does not provide shell access.")
+			println("Hi there! You've successfully authenticated with the deploy key named " + key.Name + ", but Forgejo does not provide shell access.")
 		case asymkey_model.KeyTypePrincipal:
-			println("Hi there! You've successfully authenticated with the principal " + key.Content + ", but Gitea does not provide shell access.")
+			println("Hi there! You've successfully authenticated with the principal " + key.Content + ", but Forgejo does not provide shell access.")
 		default:
-			println("Hi there, " + user.Name + "! You've successfully authenticated with the key named " + key.Name + ", but Gitea does not provide shell access.")
+			println("Hi there, " + user.Name + "! You've successfully authenticated with the key named " + key.Name + ", but Forgejo does not provide shell access.")
 		}
-		println("If this is unexpected, please log in with password and setup Gitea under another user.")
+		println("If this is unexpected, please log in with password and setup Forgejo under another user.")
 		return nil
 	} else if c.Bool("debug") {
 		log.Debug("SSH_ORIGINAL_COMMAND: %s", os.Getenv("SSH_ORIGINAL_COMMAND"))
