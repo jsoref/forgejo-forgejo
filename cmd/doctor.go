@@ -25,7 +25,7 @@ import (
 var cmdDoctorCheck = &cli.Command{
 	Name:        "check",
 	Usage:       "Diagnose and optionally fix problems",
-	Description: "A command to diagnose problems with the current Gitea instance according to the given configuration. Some problems can optionally be fixed by modifying the database or data storage.",
+	Description: "A command to diagnose problems with the current Forgejo instance according to the given configuration. Some problems can optionally be fixed by modifying the database or data storage.",
 	Action:      runDoctorCheck,
 	Flags: []cli.Flag{
 		&cli.BoolFlag{
@@ -64,7 +64,7 @@ var cmdDoctorCheck = &cli.Command{
 var CmdDoctor = &cli.Command{
 	Name:        "doctor",
 	Usage:       "Diagnose and optionally fix problems",
-	Description: "A command to diagnose problems with the current Gitea instance according to the given configuration. Some problems can optionally be fixed by modifying the database or data storage.",
+	Description: "A command to diagnose problems with the current Forgejo instance according to the given configuration. Some problems can optionally be fixed by modifying the database or data storage.",
 
 	Subcommands: []*cli.Command{
 		cmdDoctorCheck,
@@ -83,7 +83,7 @@ var cmdRecreateTable = &cli.Command{
 			Usage: "Print SQL commands sent",
 		},
 	},
-	Description: `The database definitions Gitea uses change across versions, sometimes changing default values and leaving old unused columns.
+	Description: `The database definitions Forgejo uses change across versions, sometimes changing default values and leaving old unused columns.
 
 This command will cause Xorm to recreate tables, copying over the data and deleting the old table.
 
