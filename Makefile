@@ -286,8 +286,7 @@ misspell-check:
 .PHONY: vet
 vet:
 	@echo "Running go vet..."
-	@GOOS= GOARCH= $(GO) build code.gitea.io/gitea-vet
-	@$(GO) vet -vettool=gitea-vet $(GO_PACKAGES)
+	@$(GO) vet $(GO_PACKAGES)
 
 .PHONY: $(TAGS_EVIDENCE)
 $(TAGS_EVIDENCE):
