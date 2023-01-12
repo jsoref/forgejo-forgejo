@@ -75,6 +75,14 @@ pipeline:
     commands:
     - ./build/test-env-prepare.sh
 
+  environment-to-ini:
+    image: *golang_image
+    environment:
+      GOPROXY_OVERRIDE: *goproxy_override
+    commands:
+      - *goproxy_setup
+      - go test contrib/environment-to-ini/environment-to-ini.go contrib/environment-to-ini/environment-to-ini_test.go
+
   build:
     image: *test_image
     environment:
