@@ -174,3 +174,41 @@ func TestLinksLogin(t *testing.T) {
 
 	testLinksAsUser("user2", t)
 }
+
+func TestRedirectsWebhooks(t *testing.T) {
+	defer tests.PrepareTestEnv(t)()
+
+	//
+	// A redirect means the route exists but not if it performs as intended.
+	//
+	for _, kind := range []string{"forgejo", "gitea"} {
+		{
+			redirects := map[string]string{
+				"/user2/repo1/settings/hooks/" + kind + "/new": "/user/login",
+				"/admin/system-hooks/" + kind + "/new":         "/user/login",
+				"/admin/default-hooks/" + kind + "/new":        "/user/login",
+			}
+			for link, redirectLink := range redirects {
+				req := NewRequest(t, "GET", link)
+				resp := MakeRequest(t, req, http.StatusSeeOther)
+				assert.EqualValues(t, path.Join(setting.AppSubURL, redirectLink), test.RedirectURL(resp))
+			}
+		}
+
+		{
+			redirects := map[string]string{
+				"/user2/repo1/settings/hooks/" + kind + "/new": "/",
+				"/admin/system-hooks/" + kind + "/new":         "/",
+				"/admin/default-hooks/" + kind + "/new":        "/",
+
+				"/user2/repo1/settings/hooks/" + kind + "/1": "/",
+				"/admin/hooks/" + kind + "/1":                "/",
+			}
+			for link, redirectLink := range redirects {
+				req := NewRequest(t, "POST", link)
+				resp := MakeRequest(t, req, http.StatusSeeOther)
+				assert.EqualValues(t, path.Join(setting.AppSubURL, redirectLink), test.RedirectURL(resp))
+			}
+		}
+	}
+}
