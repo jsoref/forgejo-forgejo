@@ -32,7 +32,10 @@ import (
 	files_service "code.gitea.io/gitea/services/repository/files"
 )
 
-const giteaObjectTypeHeader = "X-Gitea-Object-Type"
+const (
+	giteaObjectTypeHeader   = "X-Gitea-Object-Type"
+	forgejoObjectTypeHeader = "X-Forgejo-Object-Type"
+)
 
 // GetRawFile get a file by path on a repository
 func GetRawFile(ctx *context.APIContext) {
@@ -79,6 +82,7 @@ func GetRawFile(ctx *context.APIContext) {
 	}
 
 	ctx.RespHeader().Set(giteaObjectTypeHeader, string(files_service.GetObjectTypeFromTreeEntry(entry)))
+	ctx.RespHeader().Set(forgejoObjectTypeHeader, string(files_service.GetObjectTypeFromTreeEntry(entry)))
 
 	if err := common.ServeBlob(ctx.Context, blob, lastModified); err != nil {
 		ctx.Error(http.StatusInternalServerError, "ServeBlob", err)
@@ -128,6 +132,7 @@ func GetRawFileOrLFS(ctx *context.APIContext) {
 	}
 
 	ctx.RespHeader().Set(giteaObjectTypeHeader, string(files_service.GetObjectTypeFromTreeEntry(entry)))
+	ctx.RespHeader().Set(forgejoObjectTypeHeader, string(files_service.GetObjectTypeFromTreeEntry(entry)))
 
 	// LFS Pointer files are at most 1024 bytes - so any blob greater than 1024 bytes cannot be an LFS file
 	if blob.Size() > 1024 {
