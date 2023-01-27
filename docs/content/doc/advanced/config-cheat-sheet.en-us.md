@@ -983,6 +983,7 @@ Default templates for project boards:
 - `ENABLE_SUCCESS_NOTICE`: **true**: Set to false to switch off success notices.
 - `SCHEDULE`: **@every 168h**: Cron syntax for scheduling a work, e.g. `@every 168h`.
 - `HTTP_ENDPOINT`: **https://dl.gitea.io/gitea/version.json**: the endpoint that Gitea will check for newer versions
+- `DOMAIN_ENDPOINT`: **release.forgejo.org**: the domain that, if specified, Gitea will check for newer versions. This is preferred over `HTTP_ENDPOINT`.
 
 #### Cron -  Delete all old system notices from database ('cron.delete_old_system_notices')
 
