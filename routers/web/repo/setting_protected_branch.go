@@ -29,7 +29,7 @@ import (
 
 // ProtectedBranch render the page to protect the repository
 func ProtectedBranch(ctx *context.Context) {
-	ctx.Data["Title"] = ctx.Tr("repo.settings")
+	ctx.Data["Title"] = ctx.Tr("repo.settings.branches")
 	ctx.Data["PageIsSettingsBranches"] = true
 
 	protectedBranches, err := git_model.GetProtectedBranches(ctx.Repo.Repository.ID)
@@ -61,7 +61,7 @@ func ProtectedBranch(ctx *context.Context) {
 
 // ProtectedBranchPost response for protect for a branch of a repository
 func ProtectedBranchPost(ctx *context.Context) {
-	ctx.Data["Title"] = ctx.Tr("repo.settings")
+	ctx.Data["Title"] = ctx.Tr("repo.settings.protected_branch")
 	ctx.Data["PageIsSettingsBranches"] = true
 
 	repo := ctx.Repo.Repository
