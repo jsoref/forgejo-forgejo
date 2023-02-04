@@ -9,7 +9,7 @@ when:
 
 variables:
  - &golang_image 'golang:1.19'
- - &gitea_test_image 'gitea/test_env:linux-amd64'
+ - &gitea_test_image 'codeberg.org/forgejo/test_env:1.18'
  - &goproxy_override ''
  - &goproxy_setup |-
       if [ -n "$${GOPROXY_OVERRIDE:-}" ]; then
