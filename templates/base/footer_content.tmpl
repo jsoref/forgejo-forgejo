@@ -1,7 +1,7 @@
 <footer>
 	<div class="ui container">
 		<div class="ui left">
-			<a target="_blank" rel="noopener noreferrer" href="https://gitea.io">{{.locale.Tr "powered_by" "Gitea"}}</a>
+			<a target="_blank" rel="noopener noreferrer" href="https://forgejo.org">{{.locale.Tr "powered_by" "Forgejo"}}</a>
 			{{if (or .ShowFooterVersion .PageIsAdmin)}}
 				{{.locale.Tr "version"}}:
 				{{if .IsAdmin}}
@@ -17,7 +17,7 @@
 		</div>
 		<div class="ui right links">
 			{{if .ShowFooterBranding}}
-				<a target="_blank" rel="noopener noreferrer" href="https://github.com/go-gitea/gitea">{{svg "octicon-mark-github"}}<span class="sr-only">GitHub</span></a>
+				<a target="_blank" rel="noopener noreferrer" href="https://codeberg.org/forgejo/forgejo">{{svg "octicon-git-branch"}}<span class="sr-only">Codeberg</span></a>
 			{{end}}
 			<div class="ui language bottom floating slide up dropdown link item">
 				{{svg "octicon-globe"}}
