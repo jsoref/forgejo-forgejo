@@ -30,6 +30,7 @@ import (
 	"code.gitea.io/gitea/modules/translation"
 	"code.gitea.io/gitea/modules/web"
 	actions_router "code.gitea.io/gitea/routers/api/actions"
+	forgejo "code.gitea.io/gitea/routers/api/forgejo/v1"
 	packages_router "code.gitea.io/gitea/routers/api/packages"
 	apiv1 "code.gitea.io/gitea/routers/api/v1"
 	"code.gitea.io/gitea/routers/common"
@@ -175,6 +176,7 @@ func NormalRoutes(ctx context.Context) *web.Route {
 
 	r.Mount("/", web_routers.Routes(ctx))
 	r.Mount("/api/v1", apiv1.Routes(ctx))
+	r.Mount("/api/forgejo/v1", forgejo.Routes(ctx))
 	r.Mount("/api/internal", private.Routes())
 
 	if setting.Packages.Enabled {
