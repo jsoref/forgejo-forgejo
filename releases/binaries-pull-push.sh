@@ -28,7 +28,14 @@ upload() {
     echo "${CI_COMMIT_TAG##v}" | grep -qi '\-test' && export RELEASETYPE="--draft" && echo "Uploading as Draft"
     test ${RELEASETYPE+false} || echo "Uploading as Stable"
     anchor=$(echo $CI_COMMIT_TAG | sed -e 's/^v//' -e 's/[^a-zA-Z0-9]/-/g')
+    api POST repos/$PUSH_USER/forgejo/tags --data-raw '{"tag_name": "'$CI_COMMIT_TAG'", "target": "'$CI_COMMIT_SHA'"}'
     $BIN_DIR/tea release create $ASSETS --repo $PUSH_USER/forgejo --note "See https://codeberg.org/forgejo/forgejo/src/branch/forgejo/RELEASE-NOTES.md#${anchor}" --tag $CI_COMMIT_TAG --title $CI_COMMIT_TAG ${RELEASETYPE}
+    api GET repos/$PUSH_USER/forgejo/tags/$TAG > /tmp/tag.json
+    if test "$(jq --raw-output .commit.sha < /tmp/tag.json)" != "$CI_COMMIT_SHA" ; then
+	cat /tmp/tag.json
+	echo "the tag SHA in the $PUSH_USER repository does not match the tag SHA that triggered the build: $CI_COMMIT_SHA"
+	false
+    fi
 }
 
 push() {
@@ -48,9 +55,11 @@ setup_api() {
 
 api() {
     method=$1
-    path=$2
+    shift
+    path=$1
+    shift
 
-    curl --fail -X $method -sS -H "Authorization: token $RELEASETEAMTOKEN" https://$DOMAIN/api/v1/$path
+    curl --fail -X $method -sS -H "Content-Type: application/json" -H "Authorization: token $RELEASETEAMTOKEN" "$@" https://$DOMAIN/api/v1/$path
 }
 
 pull() {
