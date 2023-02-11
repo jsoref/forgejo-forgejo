@@ -23,23 +23,19 @@ import (
 	"code.gitea.io/gitea/modules/log"
 	packages_module "code.gitea.io/gitea/modules/packages"
 	container_module "code.gitea.io/gitea/modules/packages/container"
+	"code.gitea.io/gitea/modules/packages/container/oci"
 	"code.gitea.io/gitea/modules/setting"
 	"code.gitea.io/gitea/modules/util"
 	"code.gitea.io/gitea/routers/api/packages/helper"
 	packages_service "code.gitea.io/gitea/services/packages"
 	container_service "code.gitea.io/gitea/services/packages/container"
-
-	digest "github.com/opencontainers/go-digest"
 )
 
 // maximum size of a container manifest
 // https://github.com/opencontainers/distribution-spec/blob/main/spec.md#pushing-manifests
 const maxManifestSize = 10 * 1024 * 1024
 
-var (
-	imageNamePattern = regexp.MustCompile(`\A[a-z0-9]+([._-][a-z0-9]+)*(/[a-z0-9]+([._-][a-z0-9]+)*)*\z`)
-	referencePattern = regexp.MustCompile(`\A[a-zA-Z0-9_][a-zA-Z0-9._-]{0,127}\z`)
-)
+var imageNamePattern = regexp.MustCompile(`\A[a-z0-9]+([._-][a-z0-9]+)*(/[a-z0-9]+([._-][a-z0-9]+)*)*\z`)
 
 type containerHeaders struct {
 	Status        int
@@ -411,16 +407,16 @@ func CancelUploadBlob(ctx *context.Context) {
 }
 
 func getBlobFromContext(ctx *context.Context) (*packages_model.PackageFileDescriptor, error) {
-	d := ctx.Params("digest")
+	digest := ctx.Params("digest")
 
-	if digest.Digest(d).Validate() != nil {
+	if !oci.Digest(digest).Validate() {
 		return nil, container_model.ErrContainerBlobNotExist
 	}
 
 	return workaroundGetContainerBlob(ctx, &container_model.BlobSearchOptions{
 		OwnerID: ctx.Package.Owner.ID,
 		Image:   ctx.Params("image"),
-		Digest:  d,
+		Digest:  digest,
 	})
 }
 
@@ -475,14 +471,14 @@ func GetBlob(ctx *context.Context) {
 
 // https://github.com/opencontainers/distribution-spec/blob/main/spec.md#deleting-blobs
 func DeleteBlob(ctx *context.Context) {
-	d := ctx.Params("digest")
+	digest := ctx.Params("digest")
 
-	if digest.Digest(d).Validate() != nil {
+	if !oci.Digest(digest).Validate() {
 		apiErrorDefined(ctx, errBlobUnknown)
 		return
 	}
 
-	if err := deleteBlob(ctx.Package.Owner.ID, ctx.Params("image"), d); err != nil {
+	if err := deleteBlob(ctx.Package.Owner.ID, ctx.Params("image"), digest); err != nil {
 		apiError(ctx, http.StatusInternalServerError, err)
 		return
 	}
@@ -497,15 +493,15 @@ func UploadManifest(ctx *context.Context) {
 	reference := ctx.Params("reference")
 
 	mci := &manifestCreationInfo{
-		MediaType: ctx.Req.Header.Get("Content-Type"),
+		MediaType: oci.MediaType(ctx.Req.Header.Get("Content-Type")),
 		Owner:     ctx.Package.Owner,
 		Creator:   ctx.Doer,
 		Image:     ctx.Params("image"),
 		Reference: reference,
-		IsTagged:  digest.Digest(reference).Validate() != nil,
+		IsTagged:  !oci.Digest(reference).Validate(),
 	}
 
-	if mci.IsTagged && !referencePattern.MatchString(reference) {
+	if mci.IsTagged && !oci.Reference(reference).Validate() {
 		apiErrorDefined(ctx, errManifestInvalid.WithMessage("Tag is invalid"))
 		return
 	}
@@ -543,7 +539,7 @@ func UploadManifest(ctx *context.Context) {
 	})
 }
 
-func getBlobSearchOptionsFromContext(ctx *context.Context) (*container_model.BlobSearchOptions, error) {
+func getManifestFromContext(ctx *context.Context) (*packages_model.PackageFileDescriptor, error) {
 	reference := ctx.Params("reference")
 
 	opts := &container_model.BlobSearchOptions{
@@ -551,22 +547,12 @@ func getBlobSearchOptionsFromContext(ctx *context.Context) (*container_model.Blo
 		Image:      ctx.Params("image"),
 		IsManifest: true,
 	}
-
-	if digest.Digest(reference).Validate() == nil {
+	if oci.Digest(reference).Validate() {
 		opts.Digest = reference
-	} else if referencePattern.MatchString(reference) {
+	} else if oci.Reference(reference).Validate() {
 		opts.Tag = reference
 	} else {
 		return nil, container_model.ErrContainerBlobNotExist
-	}
-
-	return opts, nil
-}
-
-func getManifestFromContext(ctx *context.Context) (*packages_model.PackageFileDescriptor, error) {
-	opts, err := getBlobSearchOptionsFromContext(ctx)
-	if err != nil {
-		return nil, err
 	}
 
 	return workaroundGetContainerBlob(ctx, opts)
@@ -625,8 +611,18 @@ func GetManifest(ctx *context.Context) {
 // https://github.com/opencontainers/distribution-spec/blob/main/spec.md#deleting-tags
 // https://github.com/opencontainers/distribution-spec/blob/main/spec.md#deleting-manifests
 func DeleteManifest(ctx *context.Context) {
-	opts, err := getBlobSearchOptionsFromContext(ctx)
-	if err != nil {
+	reference := ctx.Params("reference")
+
+	opts := &container_model.BlobSearchOptions{
+		OwnerID:    ctx.Package.Owner.ID,
+		Image:      ctx.Params("image"),
+		IsManifest: true,
+	}
+	if oci.Digest(reference).Validate() {
+		opts.Digest = reference
+	} else if oci.Reference(reference).Validate() {
+		opts.Tag = reference
+	} else {
 		apiErrorDefined(ctx, errManifestUnknown)
 		return
 	}

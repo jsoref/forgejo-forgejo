@@ -11,9 +11,8 @@ import (
 
 	"code.gitea.io/gitea/modules/json"
 	"code.gitea.io/gitea/modules/packages/container/helm"
+	"code.gitea.io/gitea/modules/packages/container/oci"
 	"code.gitea.io/gitea/modules/validation"
-
-	oci "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
 const (
@@ -67,8 +66,8 @@ type Metadata struct {
 }
 
 // ParseImageConfig parses the metadata of an image config
-func ParseImageConfig(mt string, r io.Reader) (*Metadata, error) {
-	if strings.EqualFold(mt, helm.ConfigMediaType) {
+func ParseImageConfig(mediaType oci.MediaType, r io.Reader) (*Metadata, error) {
+	if strings.EqualFold(string(mediaType), helm.ConfigMediaType) {
 		return parseHelmConfig(r)
 	}
 
