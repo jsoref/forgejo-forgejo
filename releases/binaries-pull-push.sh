@@ -22,26 +22,31 @@ setup_tea() {
     fi
 }
 
-upload() {
-    ASSETS=$(ls $RELEASE_DIR/* | sed -e 's/^/-a /')
-    echo "${CI_COMMIT_TAG##v}" | grep -qi '\-rc' && export RELEASETYPE="--prerelease" && echo "Uploading as Pre-Release"
-    echo "${CI_COMMIT_TAG##v}" | grep -qi '\-test' && export RELEASETYPE="--draft" && echo "Uploading as Draft"
-    test ${RELEASETYPE+false} || echo "Uploading as Stable"
-    anchor=$(echo $CI_COMMIT_TAG | sed -e 's/^v//' -e 's/[^a-zA-Z0-9]/-/g')
-    api POST repos/$PUSH_USER/forgejo/tags --data-raw '{"tag_name": "'$CI_COMMIT_TAG'", "target": "'$CI_COMMIT_SHA'"}'
-    $BIN_DIR/tea release create $ASSETS --repo $PUSH_USER/forgejo --note "See https://codeberg.org/forgejo/forgejo/src/branch/forgejo/RELEASE-NOTES.md#${anchor}" --tag $CI_COMMIT_TAG --title $CI_COMMIT_TAG ${RELEASETYPE}
-    api GET repos/$PUSH_USER/forgejo/tags/$TAG > /tmp/tag.json
-    if test "$(jq --raw-output .commit.sha < /tmp/tag.json)" != "$CI_COMMIT_SHA" ; then
-	cat /tmp/tag.json
-	echo "the tag SHA in the $PUSH_USER repository does not match the tag SHA that triggered the build: $CI_COMMIT_SHA"
-	false
+ensure_tag() {
+    if api GET repos/$PUSH_USER/forgejo/tags/$TAG > /tmp/tag.json ; then
+	local sha=$(jq --raw-output .commit.sha < /tmp/tag.json)
+	if test "$sha" != "$CI_COMMIT_SHA" ; then
+	    cat /tmp/tag.json
+	    echo "the tag SHA in the $PUSH_USER repository does not match the tag SHA that triggered the build: $CI_COMMIT_SHA"
+	    false
+	fi
+    else
+	api POST repos/$PUSH_USER/forgejo/tags --data-raw '{"tag_name": "'$CI_COMMIT_TAG'", "target": "'$CI_COMMIT_SHA'"}'
     fi
 }
 
+upload() {
+    ASSETS=$(ls $RELEASE_DIR/* | sed -e 's/^/-a /')
+    echo "${CI_COMMIT_TAG}" | grep -qi '\-rc' && export RELEASETYPE="--prerelease" && echo "Uploading as Pre-Release"
+    echo "${CI_COMMIT_TAG}" | grep -qi '\-test' && export RELEASETYPE="--draft" && echo "Uploading as Draft"
+    test ${RELEASETYPE+false} || echo "Uploading as Stable"
+    ensure_tag
+    anchor=$(echo $CI_COMMIT_TAG | sed -e 's/^v//' -e 's/[^a-zA-Z0-9]/-/g')
+    $BIN_DIR/tea release create $ASSETS --repo $PUSH_USER/forgejo --note "See https://codeberg.org/forgejo/forgejo/src/branch/forgejo/RELEASE-NOTES.md#${anchor}" --tag $CI_COMMIT_TAG --title $CI_COMMIT_TAG ${RELEASETYPE}
+}
+
 push() {
-    if ! which curl ; then
-	apk --update --no-cache add curl
-    fi
+    setup_api
     setup_tea
     GITEA_SERVER_TOKEN=$RELEASETEAMTOKEN $BIN_DIR/tea login add --name $RELEASETEAMUSER --url $DOMAIN
     upload

@@ -17,6 +17,26 @@ test_setup() {
     touch $RELEASE_DIR/file-two.txt
 }
 
+test_ensure_tag() {
+    api DELETE repos/$PUSH_USER/forgejo/tags/$TAG || true
+    #
+    # idempotent
+    #
+    ensure_tag
+    api GET repos/$PUSH_USER/forgejo/tags/$TAG > /tmp/tag1.json
+    ensure_tag
+    api GET repos/$PUSH_USER/forgejo/tags/$TAG > /tmp/tag2.json
+    diff -u /tmp/tag[12].json
+    #
+    # sanity check on the SHA of an existing tag
+    #
+    (
+	CI_COMMIT_SHA=12345
+	! ensure_tag
+    )
+    api DELETE repos/$PUSH_USER/forgejo/tags/$TAG
+}
+
 #
 # Running the test locally instead of within Woodpecker
 #
@@ -31,6 +51,7 @@ test_run() {
     pulled=/tmp/binaries-releases-pulled
     RELEASE_DIR=$to_push
     test_setup
+    test_ensure_tag
     echo "================================ TEST BEGIN"
     push
     RELEASE_DIR=$pulled
@@ -42,6 +63,7 @@ test_run() {
 : ${CI_REPO_OWNER:=dachary}
 : ${PULL_USER=$CI_REPO_OWNER}
 : ${PUSH_USER=$CI_REPO_OWNER}
-: ${CI_COMMIT_TAG:=v17.8.20-1}
+: ${CI_COMMIT_TAG:=W17.8.20-1}
+: ${CI_COMMIT_SHA:=$(git rev-parse HEAD)}
 
 . $(dirname $0)/binaries-pull-push.sh
