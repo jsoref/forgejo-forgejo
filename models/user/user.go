@@ -535,6 +535,7 @@ var (
 		"user",
 		"v2",
 		"gitea-actions",
+		"forgejo-actions",
 	}
 
 	reservedUserPatterns = []string{"*.keys", "*.gpg", "*.rss", "*.atom"}
