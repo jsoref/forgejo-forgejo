@@ -37,9 +37,9 @@ func NewReplaceUser(name string) *User {
 
 const (
 	ActionsUserID   = -2
-	ActionsUserName = "gitea-actions"
-	ActionsFullName = "Gitea Actions"
-	ActionsEmail    = "teabot@gitea.io"
+	ActionsUserName = "forgejo-actions"
+	ActionsFullName = "Forgejo Actions"
+	ActionsEmail    = "noreply@forgejo.org"
 )
 
 // NewActionsUser creates and returns a fake user for running the actions.
