@@ -287,11 +287,11 @@ var (
 		ReactionMaxUserNum:  10,
 		ThemeColorMetaTag:   `#6cc644`,
 		MaxDisplayFileSize:  8388608,
-		DefaultTheme:        `auto`,
-		Themes:              []string{`auto`, `gitea`, `arc-green`},
+		DefaultTheme:        `forgejo-auto`,
+		Themes:              []string{`forgejo-auto`, `forgejo-light`, `forgejo-dark`, `auto`, `gitea`, `arc-green`},
 		Reactions:           []string{`+1`, `-1`, `laugh`, `hooray`, `confused`, `heart`, `rocket`, `eyes`},
-		CustomEmojis:        []string{`git`, `gitea`, `codeberg`, `gitlab`, `github`, `gogs`},
-		CustomEmojisMap:     map[string]string{"git": ":git:", "gitea": ":gitea:", "codeberg": ":codeberg:", "gitlab": ":gitlab:", "github": ":github:", "gogs": ":gogs:"},
+		CustomEmojis:        []string{`git`, `gitea`, `codeberg`, `gitlab`, `github`, `gogs`, `forgejo`},
+		CustomEmojisMap:     map[string]string{"git": ":git:", "gitea": ":gitea:", "codeberg": ":codeberg:", "gitlab": ":gitlab:", "github": ":github:", "gogs": ":gogs:", "forgejo": ":forgejo:"},
 		Notification: struct {
 			MinTimeout            time.Duration
 			TimeoutStep           time.Duration
@@ -334,9 +334,9 @@ var (
 			Description string
 			Keywords    string
 		}{
-			Author:      "Gitea - Git with a cup of tea",
-			Description: "Gitea (Git with a cup of tea) is a painless self-hosted Git service written in Go",
-			Keywords:    "go,git,self-hosted,gitea",
+			Author:      "Forgejo – Beyond coding. We forge.",
+			Description: "Forgejo is a self-hosted lightweight software forge. Easy to install and low maintenance, it just does the job.",
+			Keywords:    "git,forge,forgejo",
 		},
 	}
 
@@ -663,7 +663,7 @@ func loadFromConf(allowEmpty bool, extraConfig string) {
 	forcePathSeparator(LogRootPath)
 
 	sec := Cfg.Section("server")
-	AppName = Cfg.Section("").Key("APP_NAME").MustString("Gitea: Git with a cup of tea")
+	AppName = Cfg.Section("").Key("APP_NAME").MustString("Forgejo: Beyond coding. We Forge.")
 
 	Domain = sec.Key("DOMAIN").MustString("localhost")
 	HTTPAddr = sec.Key("HTTP_ADDR").MustString("0.0.0.0")
