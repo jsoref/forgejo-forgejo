@@ -10,8 +10,6 @@ import (
 	"runtime"
 	"strings"
 	"sync"
-
-	"code.gitea.io/gitea/modules/process"
 )
 
 type loggerMap struct {
@@ -288,15 +286,6 @@ func (l *LoggerAsWriter) Log(msg string) {
 }
 
 func init() {
-	process.Trace = func(start bool, pid process.IDType, description string, parentPID process.IDType, typ string) {
-		if start && parentPID != "" {
-			Log(1, TRACE, "Start %s: %s (from %s) (%s)", NewColoredValue(pid, FgHiYellow), description, NewColoredValue(parentPID, FgYellow), NewColoredValue(typ, Reset))
-		} else if start {
-			Log(1, TRACE, "Start %s: %s (%s)", NewColoredValue(pid, FgHiYellow), description, NewColoredValue(typ, Reset))
-		} else {
-			Log(1, TRACE, "Done %s: %s", NewColoredValue(pid, FgHiYellow), NewColoredValue(description, Reset))
-		}
-	}
 	_, filename, _, _ := runtime.Caller(0)
 	prefix = strings.TrimSuffix(filename, "modules/log/log.go")
 	if prefix == filename {
