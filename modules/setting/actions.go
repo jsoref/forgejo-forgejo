@@ -15,7 +15,7 @@ var (
 		DefaultActionsURL string `ini:"DEFAULT_ACTIONS_URL"`
 	}{
 		Enabled:           false,
-		DefaultActionsURL: "https://gitea.com",
+		DefaultActionsURL: "https://codeberg.org",
 	}
 )
 
