@@ -3,7 +3,14 @@
 
 package hash
 
-const DefaultHashAlgorithmName = "pbkdf2"
+// DefaultHashAlgorithmName represents the default value of PASSWORD_HASH_ALGO
+// configured in app.ini.
+//
+// It is NOT the same and does NOT map to the defaultEmptyHashAlgorithmSpecification.
+//
+// It will be dealiased as per aliasAlgorithmNames whereas
+// defaultEmptyHashAlgorithmSpecification does not undergo dealiasing.
+const DefaultHashAlgorithmName = "pbkdf2_hi"
 
 var DefaultHashAlgorithm *PasswordHashAlgorithm
 
