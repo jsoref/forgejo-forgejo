@@ -52,4 +52,9 @@ func TestAPITwoFactor(t *testing.T) {
 	req = AddBasicAuthHeader(req, user.Name)
 	req.Header.Set("X-Gitea-OTP", passcode)
 	MakeRequest(t, req, http.StatusOK)
+
+	req = NewRequestf(t, "GET", "/api/v1/user")
+	req = AddBasicAuthHeader(req, user.Name)
+	req.Header.Set("X-Forgejo-OTP", passcode)
+	MakeRequest(t, req, http.StatusOK)
 }
