@@ -50,11 +50,20 @@ func init() {
 	originalSubcommandHelpTemplate = cli.SubcommandHelpTemplate
 }
 
+func forgejoEnv() {
+	for _, k := range []string{"CUSTOM", "WORK_DIR"} {
+		if v, ok := os.LookupEnv("FORGEJO_" + k); ok {
+			os.Setenv("GITEA_"+k, v)
+		}
+	}
+}
+
 func main() {
+	forgejoEnv()
 	app := cli.NewApp()
-	app.Name = "Gitea"
-	app.Usage = "A painless self-hosted Git service"
-	app.Description = `By default, gitea will start serving using the webserver with no
+	app.Name = "Forgejo"
+	app.Usage = "Beyond coding. We forge."
+	app.Description = `By default, forgejo will start serving using the webserver with no
 arguments - which can alternatively be run by running the subcommand web.`
 	app.Version = Version + formatBuiltWith()
 	app.Commands = []cli.Command{
@@ -177,6 +186,9 @@ func adjustHelpTemplate(originalTemplate string) string {
 	overridden := ""
 	if _, ok := os.LookupEnv("GITEA_CUSTOM"); ok {
 		overridden = "(GITEA_CUSTOM)"
+	}
+	if _, ok := os.LookupEnv("FORGEJO_CUSTOM"); ok {
+		overridden = "(FORGEJO_CUSTOM)"
 	}
 
 	return fmt.Sprintf(`%s
