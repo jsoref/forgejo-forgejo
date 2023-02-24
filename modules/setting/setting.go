@@ -167,6 +167,9 @@ func SetCustomPathAndConf(providedCustom, providedConf, providedWorkPath string)
 	if giteaCustom, ok := os.LookupEnv("GITEA_CUSTOM"); ok {
 		CustomPath = giteaCustom
 	}
+	if forgejoCustom, ok := os.LookupEnv("FORGEJO_CUSTOM"); ok {
+		CustomPath = forgejoCustom
+	}
 	if len(providedCustom) != 0 {
 		CustomPath = providedCustom
 	}
