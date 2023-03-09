@@ -58,6 +58,7 @@ func main() {
 arguments - which can alternatively be run by running the subcommand web.`
 	app.Version = Version + formatBuiltWith()
 	app.Commands = []cli.Command{
+		cmd.CmdActions,
 		cmd.CmdWeb,
 		cmd.CmdServ,
 		cmd.CmdHook,
