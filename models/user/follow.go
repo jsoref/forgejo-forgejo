@@ -4,6 +4,8 @@
 package user
 
 import (
+	"context"
+
 	"code.gitea.io/gitea/models/db"
 	"code.gitea.io/gitea/modules/timeutil"
 )
@@ -27,12 +29,12 @@ func IsFollowing(userID, followID int64) bool {
 }
 
 // FollowUser marks someone be another's follower.
-func FollowUser(userID, followID int64) (err error) {
+func FollowUser(ctx context.Context, userID, followID int64) (err error) {
 	if userID == followID || IsFollowing(userID, followID) {
 		return nil
 	}
 
-	ctx, committer, err := db.TxContext(db.DefaultContext)
+	ctx, committer, err := db.TxContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -53,12 +55,12 @@ func FollowUser(userID, followID int64) (err error) {
 }
 
 // UnfollowUser unmarks someone as another's follower.
-func UnfollowUser(userID, followID int64) (err error) {
+func UnfollowUser(ctx context.Context, userID, followID int64) (err error) {
 	if userID == followID || !IsFollowing(userID, followID) {
 		return nil
 	}
 
-	ctx, committer, err := db.TxContext(db.DefaultContext)
+	ctx, committer, err := db.TxContext(ctx)
 	if err != nil {
 		return err
 	}

@@ -218,12 +218,12 @@ type ReactionOptions struct {
 }
 
 // CreateReaction creates reaction for issue or comment.
-func CreateReaction(opts *ReactionOptions) (*Reaction, error) {
+func CreateReaction(ctx context.Context, opts *ReactionOptions) (*Reaction, error) {
 	if !setting.UI.ReactionsLookup.Contains(opts.Type) {
 		return nil, ErrForbiddenIssueReaction{opts.Type}
 	}
 
-	ctx, committer, err := db.TxContext(db.DefaultContext)
+	ctx, committer, err := db.TxContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -238,25 +238,6 @@ func CreateReaction(opts *ReactionOptions) (*Reaction, error) {
 		return nil, err
 	}
 	return reaction, nil
-}
-
-// CreateIssueReaction creates a reaction on issue.
-func CreateIssueReaction(doerID, issueID int64, content string) (*Reaction, error) {
-	return CreateReaction(&ReactionOptions{
-		Type:    content,
-		DoerID:  doerID,
-		IssueID: issueID,
-	})
-}
-
-// CreateCommentReaction creates a reaction on comment.
-func CreateCommentReaction(doerID, issueID, commentID int64, content string) (*Reaction, error) {
-	return CreateReaction(&ReactionOptions{
-		Type:      content,
-		DoerID:    doerID,
-		IssueID:   issueID,
-		CommentID: commentID,
-	})
 }
 
 // DeleteReaction deletes reaction for issue or comment.

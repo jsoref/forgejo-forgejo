@@ -115,6 +115,21 @@
 									</form>
 								{{end}}
 							</li>
+							<li class="block">
+								{{if $.IsBlocked}}
+									<form method="post" action="{{.Link}}?action=unblock&redirect_to={{$.Link}}">
+										{{$.CsrfTokenHtml}}
+										<button type="submit" class="ui basic red button">{{svg "octicon-blocked"}} {{.locale.Tr "user.unblock"}}</button>
+									</form>
+								{{else}}
+									<form>
+										<button type="submit" class="ui basic orange button delete-button"
+										data-modal-id="block-user" data-url="{{.Link}}?action=block">
+											{{svg "octicon-blocked"}} {{.locale.Tr "user.block"}}
+										</button>
+									</form>
+								{{end}}
+							</li>
 							{{end}}
 						</ul>
 					</div>
@@ -156,4 +171,19 @@
 		</div>
 	</div>
 </div>
+<div class="ui small basic delete modal" id="block-user">
+	<div class="ui icon header">
+		{{svg "octicon-blocked" 16 "blocked inside"}}
+		{{$.locale.Tr "user.block_user"}}
+	</div>
+	<div class="content">
+		<p>{{$.locale.Tr "user.block_user.detail"}}</p>
+		<ul>
+				<li>{{$.locale.Tr "user.block_user.detail_1"}}</li>
+				<li>{{$.locale.Tr "user.block_user.detail_2"}}</li>
+		</ul>
+	</div>
+	{{template "base/modal_actions_confirm" .}}
+</div>
+
 {{template "base/footer" .}}

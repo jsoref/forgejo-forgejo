@@ -516,6 +516,8 @@ func registerRoutes(m *web.Route) {
 			})
 			addWebhookEditRoutes()
 		}, webhooksEnabled)
+
+		m.Get("/blocked_users", user_setting.BlockedUsers)
 	}, reqSignIn, ctxDataSet("PageIsUserSettings", true, "AllThemes", setting.UI.Themes, "EnablePackages", setting.Packages.Enabled))
 
 	m.Group("/user", func() {
