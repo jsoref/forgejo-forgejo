@@ -10,7 +10,7 @@ depends_on:
 
 variables:
  - &golang_image 'golang:1.20'
- - &test_image 'codeberg.org/forgejo/test_env:main'
+ - &test_image 'codeberg.org/forgejo/test_env:1.19'
  - &mysql_image 'mysql:8'
  - &pgsql_image 'postgres:10'
  - &goproxy_override ''
