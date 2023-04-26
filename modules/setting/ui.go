@@ -77,7 +77,7 @@ var UI = struct {
 	GraphMaxCommitNum:   100,
 	CodeCommentLines:    4,
 	ReactionMaxUserNum:  10,
-	ThemeColorMetaTag:   `#6cc644`,
+	ThemeColorMetaTag:   ``,
 	MaxDisplayFileSize:  8388608,
 	DefaultTheme:        `forgejo-auto`,
 	Themes:              []string{`forgejo-auto`, `forgejo-light`, `forgejo-dark`, `auto`, `gitea`, `arc-green`},
