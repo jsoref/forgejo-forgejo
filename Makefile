@@ -103,7 +103,7 @@ ifeq ($(VERSION),main)
 endif
 
 # SemVer
-FORGEJO_VERSION := 4.1.0+0-gitea-1.19.1
+FORGEJO_VERSION := 4.2.0+0-gitea-1.19.2
 
 LDFLAGS := $(LDFLAGS) -X "main.MakeVersion=$(MAKE_VERSION)" -X "main.Version=$(GITEA_VERSION)" -X "main.Tags=$(TAGS)" -X "code.gitea.io/gitea/routers/api/forgejo/v1.ForgejoVersion=$(FORGEJO_VERSION)"
 
