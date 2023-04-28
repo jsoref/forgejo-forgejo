@@ -98,7 +98,7 @@ else
 endif
 
 # SemVer
-FORGEJO_VERSION := 4.1.0+0-gitea-1.19.1
+FORGEJO_VERSION := 4.2.0+0-gitea-1.19.2
 
 # if version = "main" then update version to "nightly"
 ifeq ($(VERSION),main)
