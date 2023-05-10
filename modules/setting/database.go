@@ -75,7 +75,7 @@ func LoadDBSetting() {
 		log.Error("Deprecated database mysql charset utf8 support, please use utf8mb4 or convert utf8 to utf8mb4.")
 	}
 
-	Database.Path = sec.Key("PATH").MustString(filepath.Join(AppDataPath, "gitea.db"))
+	Database.Path = sec.Key("PATH").MustString(filepath.Join(AppDataPath, "forgejo.db"))
 	Database.Timeout = sec.Key("SQLITE_TIMEOUT").MustInt(500)
 	Database.SQLiteJournalMode = sec.Key("SQLITE_JOURNAL_MODE").MustString("")
 
