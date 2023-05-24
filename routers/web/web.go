@@ -480,7 +480,7 @@ func RegisterRoutes(m *web.Route) {
 			m.Get("", user_setting.Secrets)
 			m.Post("", web.Bind(forms.AddSecretForm{}), user_setting.SecretsPost)
 			m.Post("/delete", user_setting.SecretsDelete)
-		})
+		}, actions.MustEnableActions)
 		m.Get("/organization", user_setting.Organization)
 		m.Get("/repos", user_setting.Repos)
 		m.Post("/repos/unadopted", user_setting.AdoptOrDeleteRepository)
@@ -858,7 +858,7 @@ func RegisterRoutes(m *web.Route) {
 					m.Get("", org.Secrets)
 					m.Post("", web.Bind(forms.AddSecretForm{}), org.SecretsPost)
 					m.Post("/delete", org.SecretsDelete)
-				})
+				}, actions.MustEnableActions)
 
 				m.Route("/delete", "GET,POST", org.SettingsDelete)
 
@@ -1051,7 +1051,7 @@ func RegisterRoutes(m *web.Route) {
 				m.Get("", repo.Secrets)
 				m.Post("", web.Bind(forms.AddSecretForm{}), repo.SecretsPost)
 				m.Post("/delete", repo.DeleteSecret)
-			})
+			}, actions.MustEnableActions)
 
 			m.Group("/lfs", func() {
 				m.Get("/", repo.LFSFiles)
