@@ -52,7 +52,7 @@ After=network.target
 # Uncomment the next line if you have repos with lots of files and get a HTTP 500 error because of that
 # LimitNOFILE=524288:524288
 RestartSec=2s
-Type=notify
+Type=simple
 User=git
 Group=git
 WorkingDirectory=/var/lib/forgejo/
