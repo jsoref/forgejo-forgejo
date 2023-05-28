@@ -1,0 +1,34 @@
+name: testing unit
+
+on:
+  pull_request:
+  push:
+    branches:
+      - 'forgejo*'
+      - 'v*/forgejo*'
+
+jobs:
+  test-unit:
+    runs-on: ubuntu-latest
+    container:
+      image: codeberg.org/forgejo/test_env:main
+    steps:
+      - uses: https://code.forgejo.org/actions/checkout@v3
+      - uses: https://code.forgejo.org/actions/setup-go@v4
+        with:
+          go-version: ">=1.20.0"
+      - run: |
+          git config --add safe.directory '*'
+          chown -R gitea:gitea . /go
+      - run: |
+          su gitea -c 'make deps-backend'
+      - run: |
+          su gitea -c 'make backend'
+        env:
+          TAGS: bindata
+      - run: |
+          su gitea -c 'make unit-test-coverage test-check'
+        timeout-minutes: 50
+        env:
+          RACE_ENABLED: 'true'
+          TAGS: bindata

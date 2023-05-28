@@ -1,0 +1,36 @@
+name: testing SQLite
+
+on:
+  pull_request:
+  push:
+    branches:
+      - 'forgejo*'
+      - 'v*/forgejo*'
+
+jobs:
+  test-sqlite:
+    runs-on: ubuntu-latest
+    container:
+      image: codeberg.org/forgejo/test_env:main
+    steps:
+      - uses: https://code.forgejo.org/actions/checkout@v3
+      - uses: https://code.forgejo.org/actions/setup-go@v4
+        with:
+          go-version: ">=1.20.0"
+      - run: |
+          git config --add safe.directory '*'
+          chown -R gitea:gitea . /go
+      - run: |
+          su gitea -c 'make deps-backend'
+      - run: |
+          su gitea -c 'make backend'
+        env:
+          TAGS: bindata gogit sqlite sqlite_unlock_notify
+      - run: |
+          su gitea -c 'make test-sqlite-migration test-sqlite'
+        timeout-minutes: 50
+        env:
+          TAGS: bindata gogit sqlite sqlite_unlock_notify
+          RACE_ENABLED: true
+          TEST_TAGS: gogit sqlite sqlite_unlock_notify
+          USE_REPO_TEST_DIR: 1
