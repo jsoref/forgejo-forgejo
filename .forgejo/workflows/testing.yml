@@ -1,0 +1,152 @@
+name: testing
+
+on:
+  pull_request:
+  push:
+    branches:
+      - 'forgejo*'
+      - 'v*/forgejo*'
+
+jobs:
+  lint-backend:
+    runs-on: docker
+    steps:
+      - uses: https://code.forgejo.org/actions/checkout@v3
+      - uses: https://code.forgejo.org/actions/setup-go@v4
+        with:
+          go-version: ">=1.20"
+          check-latest: true
+      - run: make deps-backend deps-tools
+      - run: make lint-backend
+        env:
+          TAGS: bindata sqlite sqlite_unlock_notify
+  checks-backend:
+    runs-on: docker
+    steps:
+      - uses: https://code.forgejo.org/actions/checkout@v3
+      - uses: https://code.forgejo.org/actions/setup-go@v4
+        with:
+          go-version: ">=1.20"
+          check-latest: true
+      - run: make deps-backend deps-tools
+      - run: make --always-make checks-backend # ensure the "go-licenses" make target runs
+  test-unit:
+    runs-on: docker
+    needs: [lint-backend, checks-backend]
+    container:
+      image: codeberg.org/forgejo/test_env:main
+    steps:
+      - uses: https://code.forgejo.org/actions/checkout@v3
+      - uses: https://code.forgejo.org/actions/setup-go@v4
+        with:
+          go-version: ">=1.20.0"
+      - run: |
+          git config --add safe.directory '*'
+          chown -R gitea:gitea . /go
+      - run: |
+          su gitea -c 'make deps-backend'
+      - run: |
+          su gitea -c 'make backend'
+        env:
+          TAGS: bindata
+      - run: |
+          su gitea -c 'make unit-test-coverage test-check'
+        timeout-minutes: 50
+        env:
+          RACE_ENABLED: 'true'
+          TAGS: bindata
+  test-mysql:
+    runs-on: docker
+    needs: [lint-backend, checks-backend]
+    container:
+      image: codeberg.org/forgejo/test_env:main
+    services:
+      mysql8:
+        image: mysql:8
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_DATABASE: testgitea
+        ports:
+          - "3306:3306"
+    steps:
+      - uses: https://code.forgejo.org/actions/checkout@v3
+      - uses: https://code.forgejo.org/actions/setup-go@v4
+        with:
+          go-version: ">=1.20.0"
+      - run: |
+          git config --add safe.directory '*'
+          chown -R gitea:gitea . /go
+      - run: |
+          su gitea -c 'make deps-backend'
+      - run: |
+          su gitea -c 'make backend'
+        env:
+          TAGS: bindata
+      - run: |
+          su gitea -c 'make test-mysql8-migration test-mysql8'
+        timeout-minutes: 50
+        env:
+          TAGS: bindata
+          USE_REPO_TEST_DIR: 1
+  test-pgsql:
+    runs-on: docker
+    needs: [lint-backend, checks-backend]
+    container:
+      image: codeberg.org/forgejo/test_env:main
+    services:
+      pgsql:
+        image: postgres:15
+        env:
+          POSTGRES_DB: test
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - "5432:5432"
+    steps:
+      - uses: https://code.forgejo.org/actions/checkout@v3
+      - uses: https://code.forgejo.org/actions/setup-go@v4
+        with:
+          go-version: ">=1.20.0"
+      - run: |
+          git config --add safe.directory '*'
+          chown -R gitea:gitea . /go
+      - run: |
+          su gitea -c 'make deps-backend'
+      - run: |
+          su gitea -c 'make backend'
+        env:
+          TAGS: bindata
+      - run: |
+          su gitea -c 'make test-pgsql-migration test-pgsql'
+        timeout-minutes: 50
+        env:
+          TAGS: bindata gogit
+          RACE_ENABLED: true
+          TEST_TAGS: gogit
+          USE_REPO_TEST_DIR: 1
+  test-sqlite:
+    runs-on: docker
+    needs: [lint-backend, checks-backend]
+    container:
+      image: codeberg.org/forgejo/test_env:main
+    steps:
+      - uses: https://code.forgejo.org/actions/checkout@v3
+      - uses: https://code.forgejo.org/actions/setup-go@v4
+        with:
+          go-version: ">=1.20.0"
+      - run: |
+          git config --add safe.directory '*'
+          chown -R gitea:gitea . /go
+      - run: |
+          su gitea -c 'make deps-backend'
+      - run: |
+          su gitea -c 'make backend'
+        env:
+          TAGS: bindata gogit sqlite sqlite_unlock_notify
+      - run: |
+          su gitea -c 'make test-sqlite-migration test-sqlite'
+        timeout-minutes: 50
+        env:
+          TAGS: bindata gogit sqlite sqlite_unlock_notify
+          RACE_ENABLED: true
+          TEST_TAGS: gogit sqlite sqlite_unlock_notify
+          USE_REPO_TEST_DIR: 1
