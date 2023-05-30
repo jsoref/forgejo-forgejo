@@ -110,6 +110,10 @@ func (issue *Issue) createCrossReferences(stdCtx context.Context, ctx *crossRefe
 		if ctx.OrigComment != nil {
 			refCommentID = ctx.OrigComment.ID
 		}
+		if ctx.OrigIssue.NoAutoTime {
+			xref.Issue.NoAutoTime = true
+			xref.Issue.UpdatedUnix = ctx.OrigIssue.UpdatedUnix
+		}
 		opts := &CreateCommentOptions{
 			Type:         ctx.Type,
 			Doer:         ctx.Doer,
