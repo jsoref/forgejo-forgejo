@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 
+	"code.gitea.io/gitea/models/forgejo_migrations"
 	"code.gitea.io/gitea/models/migrations/v1_10"
 	"code.gitea.io/gitea/models/migrations/v1_11"
 	"code.gitea.io/gitea/models/migrations/v1_12"
@@ -607,5 +608,7 @@ Please try upgrading to a lower version first (suggested v1.6.4), then upgrade t
 			return err
 		}
 	}
-	return nil
+
+	// Execute Forgejo specific migrations.
+	return forgejo_migrations.Migrate(x)
 }
