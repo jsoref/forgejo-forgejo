@@ -4,7 +4,6 @@
 package integration
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -13,7 +12,6 @@ import (
 
 	"code.gitea.io/gitea/modules/json"
 	"code.gitea.io/gitea/modules/setting"
-	"code.gitea.io/gitea/routers"
 	"code.gitea.io/gitea/tests"
 
 	"gitea.com/go-chi/session"
@@ -57,7 +55,7 @@ func TestSessionFileCreation(t *testing.T) {
 	oldSessionConfig := setting.SessionConfig.ProviderConfig
 	defer func() {
 		setting.SessionConfig.ProviderConfig = oldSessionConfig
-		c = routers.NormalRoutes(context.TODO())
+		setNormalRoutes()
 	}()
 
 	var config session.Options
@@ -76,7 +74,7 @@ func TestSessionFileCreation(t *testing.T) {
 
 	setting.SessionConfig.ProviderConfig = string(newConfigBytes)
 
-	c = routers.NormalRoutes(context.TODO())
+	setNormalRoutes()
 
 	t.Run("NoSessionOnViewIssue", func(t *testing.T) {
 		defer tests.PrintCurrentTest(t)()

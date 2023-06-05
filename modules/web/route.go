@@ -14,6 +14,10 @@ import (
 	chi "github.com/go-chi/chi/v5"
 )
 
+type KeyTestMiddlewareHookType string
+
+var KeyTestMiddlewareHook = KeyTestMiddlewareHookType("testMiddlewareHook")
+
 // Bind binding an obj to a handler
 func Bind[T any](_ T) any {
 	return func(ctx *context.Context) {
