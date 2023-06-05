@@ -167,6 +167,10 @@ func Routes(ctx gocontext.Context) *web.Route {
 	mid = append(mid, user.GetNotificationCount)
 	mid = append(mid, repo.GetActiveStopwatch)
 	mid = append(mid, goGet)
+	middlewareHook := ctx.Value(web.KeyTestMiddlewareHook)
+	if middlewareHook != nil {
+		mid = append(mid, middlewareHook)
+	}
 
 	others := web.NewRoute()
 	others.Use(mid...)
