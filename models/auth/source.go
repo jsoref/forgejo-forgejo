@@ -5,6 +5,7 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 
@@ -302,6 +303,17 @@ func GetSourceByID(id int64) (*Source, error) {
 		return nil, err
 	} else if !has {
 		return nil, ErrSourceNotExist{id}
+	}
+	return source, nil
+}
+
+func GetSourceByName(ctx context.Context, name string) (*Source, error) {
+	source := &Source{}
+	has, err := db.GetEngine(ctx).Where("name = ?", name).Get(source)
+	if err != nil {
+		return nil, err
+	} else if !has {
+		return nil, ErrSourceNotExist{}
 	}
 	return source, nil
 }
