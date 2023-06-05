@@ -52,11 +52,11 @@ func TestLinkAccountChoose(t *testing.T) {
 		assert.Equal(t, resp.Code, http.StatusOK, resp.Body)
 		doc := NewHTMLParser(t, resp.Body)
 
-		class, exists := doc.Find(".new-menu-inner .item[data-tab=\"auth-link-signup-tab\"]").Attr("class")
+		class, exists := doc.Find(`.new-menu-inner .item[data-tab="auth-link-signup-tab"]`).Attr("class")
 		assert.True(t, exists, resp.Body)
 		assert.Equal(t, testCase.signupTab, class)
 
-		class, exists = doc.Find(".new-menu-inner .item[data-tab=\"auth-link-signin-tab\"]").Attr("class")
+		class, exists = doc.Find(`.new-menu-inner .item[data-tab="auth-link-signin-tab"]`).Attr("class")
 		assert.True(t, exists)
 		assert.Equal(t, testCase.signinTab, class)
 	}
