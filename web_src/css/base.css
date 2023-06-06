@@ -2030,6 +2030,13 @@ a.ui.basic.label:hover {
   color: var(--color-git);
 }
 
+@media (max-width: 767px) {
+  .migrate .svg {
+    height: 150px;
+    width: 150px;
+  }
+}
+
 .color-icon {
   display: inline-block;
   border-radius: 100%;
