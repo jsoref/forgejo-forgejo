@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"code.gitea.io/gitea/models/db"
 	user_model "code.gitea.io/gitea/models/user"
 	"code.gitea.io/gitea/modules/context"
 	"code.gitea.io/gitea/routers/utils"
@@ -20,7 +21,7 @@ func BlockedUsers(ctx *context.Context) {
 	ctx.Data["Title"] = ctx.Tr("settings.blocked_users")
 	ctx.Data["PageIsSettingsBlockedUsers"] = true
 
-	blockedUsers, err := user_model.ListBlockedUsers(ctx, ctx.Org.Organization.ID)
+	blockedUsers, err := user_model.ListBlockedUsers(ctx, ctx.Org.Organization.ID, db.ListOptions{})
 	if err != nil {
 		ctx.ServerError("ListBlockedUsers", err)
 		return

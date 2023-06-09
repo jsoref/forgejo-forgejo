@@ -6,6 +6,7 @@ package setting
 import (
 	"net/http"
 
+	"code.gitea.io/gitea/models/db"
 	user_model "code.gitea.io/gitea/models/user"
 	"code.gitea.io/gitea/modules/base"
 	"code.gitea.io/gitea/modules/context"
@@ -23,7 +24,7 @@ func BlockedUsers(ctx *context.Context) {
 	ctx.Data["BaseLink"] = setting.AppSubURL + "/user/settings/blocked_users"
 	ctx.Data["BaseLinkNew"] = setting.AppSubURL + "/user/settings/blocked_users"
 
-	blockedUsers, err := user_model.ListBlockedUsers(ctx, ctx.Doer.ID)
+	blockedUsers, err := user_model.ListBlockedUsers(ctx, ctx.Doer.ID, db.ListOptions{})
 	if err != nil {
 		ctx.ServerError("ListBlockedUsers", err)
 		return

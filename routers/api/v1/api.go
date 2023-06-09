@@ -905,6 +905,12 @@ func Routes(ctx gocontext.Context) *web.Route {
 					Patch(bind(api.EditHookOption{}), user.EditHook).
 					Delete(user.DeleteHook)
 			}, reqWebhooksEnabled())
+
+			m.Group("", func() {
+				m.Get("/list_blocked", user.ListBlockedUsers)
+				m.Put("/block/{username}", user.BlockUser)
+				m.Put("/unblock/{username}", user.UnblockUser)
+			})
 		}, tokenRequiresScopes(auth_model.AccessTokenScopeCategoryUser), reqToken())
 
 		// Repositories (requires repo scope, org scope)
@@ -1321,6 +1327,12 @@ func Routes(ctx gocontext.Context) *web.Route {
 					Delete(org.DeleteHook)
 			}, reqToken(), reqOrgOwnership(), reqWebhooksEnabled())
 			m.Get("/activities/feeds", org.ListOrgActivityFeeds)
+
+			m.Group("", func() {
+				m.Get("/list_blocked", reqToken(), reqOrgOwnership(), org.ListBlockedUsers)
+				m.Put("/block/{username}", reqToken(), reqOrgOwnership(), org.BlockUser)
+				m.Put("/unblock/{username}", reqToken(), reqOrgOwnership(), org.UnblockUser)
+			}, reqToken(), reqOrgOwnership())
 		}, tokenRequiresScopes(auth_model.AccessTokenScopeCategoryOrganization), orgAssignment(true))
 		m.Group("/teams/{teamid}", func() {
 			m.Combo("").Get(reqToken(), org.GetTeam).

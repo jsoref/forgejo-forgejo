@@ -52,18 +52,29 @@ func UnblockUser(ctx context.Context, userID, blockID int64) error {
 	return err
 }
 
+// CountBlockedUsers returns the number of users the user has blocked.
+func CountBlockedUsers(ctx context.Context, userID int64) (int64, error) {
+	return db.GetEngine(ctx).Where("user_id=?", userID).Count(&BlockedUser{})
+}
+
 // ListBlockedUsers returns the users that the user has blocked.
 // The created_unix field of the user struct is overridden by the creation_unix
 // field of blockeduser.
-func ListBlockedUsers(ctx context.Context, userID int64) ([]*User, error) {
-	users := make([]*User, 0, 8)
-	err := db.GetEngine(ctx).
+func ListBlockedUsers(ctx context.Context, userID int64, opts db.ListOptions) ([]*User, error) {
+	sess := db.GetEngine(ctx).
 		Select("`forgejo_blocked_user`.created_unix, `user`.*").
 		Join("INNER", "forgejo_blocked_user", "`user`.id=`forgejo_blocked_user`.block_id").
-		Where("`forgejo_blocked_user`.user_id=?", userID).
-		Find(&users)
+		Where("`forgejo_blocked_user`.user_id=?", userID)
 
-	return users, err
+	if opts.Page > 0 {
+		sess = db.SetSessionPagination(sess, &opts)
+		users := make([]*User, 0, opts.PageSize)
+
+		return users, sess.Find(&users)
+	}
+
+	users := make([]*User, 0, 8)
+	return users, sess.Find(&users)
 }
 
 // ListBlockedByUsersID returns the ids of the users that blocked the user.
