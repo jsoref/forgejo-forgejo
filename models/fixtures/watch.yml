@@ -26,4 +26,10 @@
   id: 5
   user_id: 11
   repo_id: 1
-  mode: 3 # auto 
+  mode: 3 # auto
+
+-
+  id: 6
+  user_id: 4
+  repo_id: 2
+  mode: 1 # normal

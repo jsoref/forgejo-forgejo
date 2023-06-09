@@ -24,14 +24,23 @@ func init() {
 
 // IsFollowing returns true if user is following followID.
 func IsFollowing(userID, followID int64) bool {
-	has, _ := db.GetEngine(db.DefaultContext).Get(&Follow{UserID: userID, FollowID: followID})
+	return IsFollowingCtx(db.DefaultContext, userID, followID)
+}
+
+// IsFollowingCtx returns true if user is following followID.
+func IsFollowingCtx(ctx context.Context, userID, followID int64) bool {
+	has, _ := db.GetEngine(ctx).Get(&Follow{UserID: userID, FollowID: followID})
 	return has
 }
 
 // FollowUser marks someone be another's follower.
 func FollowUser(ctx context.Context, userID, followID int64) (err error) {
-	if userID == followID || IsFollowing(userID, followID) {
+	if userID == followID || IsFollowingCtx(ctx, userID, followID) {
 		return nil
+	}
+
+	if IsBlocked(ctx, userID, followID) || IsBlocked(ctx, followID, userID) {
+		return ErrBlockedByUser
 	}
 
 	ctx, committer, err := db.TxContext(ctx)
@@ -56,7 +65,7 @@ func FollowUser(ctx context.Context, userID, followID int64) (err error) {
 
 // UnfollowUser unmarks someone as another's follower.
 func UnfollowUser(ctx context.Context, userID, followID int64) (err error) {
-	if userID == followID || !IsFollowing(userID, followID) {
+	if userID == followID || !IsFollowingCtx(ctx, userID, followID) {
 		return nil
 	}
 

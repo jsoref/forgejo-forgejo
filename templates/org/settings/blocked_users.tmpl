@@ -1,0 +1,40 @@
+{{template "org/settings/layout_head" (dict "ctxData" . "pageClass" "organization settings blocked-users")}}
+<div class="org-setting-content">
+	<div class="ui attached segment">
+		<form class="ui form ignore-dirty" id="block-user-form" action="{{$.Link}}/block" method="post">
+			{{.CsrfTokenHtml}}
+			<input type="hidden" name="uid" value="">
+			<div class="inline field ui left">
+				<div id="search-user-box" class="ui search">
+					<div class="ui input">
+						<input class="prompt" name="uname" placeholder="{{.locale.Tr "repo.settings.search_user_placeholder"}}" autocomplete="off" required>
+					</div>
+				</div>
+			</div>
+			<button type="submit" class="ui red button">{{.locale.Tr "user.block"}}</button>
+		</form>
+	</div>
+	<div class="ui bottom attached table segment blocked-users">
+		{{range .BlockedUsers}}
+			<div class="item gt-df gt-ac gt-fw">
+				{{avatar $.Context . 48 "gt-mr-3 gt-mb-0"}}
+					<div class="gt-df gt-fc">
+						<a href="{{.HomeLink}}">{{.Name}}</a>
+						<i class="gt-mt-2">{{$.locale.Tr "settings.blocked_since" (DateTime "short" .CreatedUnix) | Safe}}</i>
+					</div>
+					<div class="gt-ml-auto content">
+						<form action="{{$.Link}}/unblock" method="post">
+							{{$.CsrfTokenHtml}}
+							<input type="hidden" name="user_id" value="{{.ID}}">
+							<button class="ui red button">{{$.locale.Tr "user.unblock"}}</button>
+						</form>
+					</div>
+				</div>
+			{{else}}
+				<div class="item">
+					<span class="text grey italic">{{$.locale.Tr "settings.blocked_users_none"}}</span>
+				</div>
+			{{end}}
+		</div>
+</div>
+{{template "org/settings/layout_footer" .}}

@@ -6,6 +6,7 @@ import (
 	"context"
 
 	"code.gitea.io/gitea/models/db"
+	repo_model "code.gitea.io/gitea/models/repo"
 	user_model "code.gitea.io/gitea/models/user"
 )
 
@@ -30,8 +31,25 @@ func BlockUser(ctx context.Context, userID, blockID int64) error {
 		return err
 	}
 
-	// Unfollow the user from block's perspective.
+	// Unfollow the user from the block's perspective.
 	err = user_model.UnfollowUser(ctx, blockID, userID)
+	if err != nil {
+		return err
+	}
+
+	// Unfollow the user from the doer's perspective.
+	err = user_model.UnfollowUser(ctx, userID, blockID)
+	if err != nil {
+		return err
+	}
+
+	// Blocked user unwatch all repository owned by the doer.
+	repoIDs, err := repo_model.GetWatchedRepoIDsOwnedBy(ctx, blockID, userID)
+	if err != nil {
+		return err
+	}
+
+	err = repo_model.UnwatchRepos(ctx, blockID, repoIDs)
 	if err != nil {
 		return err
 	}

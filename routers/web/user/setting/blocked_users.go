@@ -32,3 +32,14 @@ func BlockedUsers(ctx *context.Context) {
 	ctx.Data["BlockedUsers"] = blockedUsers
 	ctx.HTML(http.StatusOK, tplSettingsBlockedUsers)
 }
+
+// UnblockUser unblocks a particular user for the doer.
+func UnblockUser(ctx *context.Context) {
+	if err := user_model.UnblockUser(ctx, ctx.Doer.ID, ctx.FormInt64("user_id")); err != nil {
+		ctx.ServerError("UnblockUser", err)
+		return
+	}
+
+	ctx.Flash.Success(ctx.Tr("settings.user_unblock_success"))
+	ctx.Redirect(setting.AppSubURL + "/user/settings/blocked_users")
+}

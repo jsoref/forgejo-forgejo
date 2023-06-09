@@ -41,7 +41,7 @@ func BlockUser(t *testing.T, doer, blockedUser *user_model.User) {
 	var respBody redirect
 	DecodeJSON(t, resp, &respBody)
 	assert.EqualValues(t, "/"+blockedUser.Name, respBody.Redirect)
-	assert.EqualValues(t, true, unittest.BeanExists(t, &user_model.BlockedUser{BlockID: blockedUser.ID, UserID: doer.ID}))
+	assert.True(t, unittest.BeanExists(t, &user_model.BlockedUser{BlockID: blockedUser.ID, UserID: doer.ID}))
 }
 
 func TestBlockUser(t *testing.T) {
@@ -155,4 +155,58 @@ func TestBlockCommentReaction(t *testing.T) {
 	DecodeJSON(t, resp, &respBody)
 
 	assert.EqualValues(t, true, respBody.Empty)
+}
+
+// TestBlockFollow ensures that the doer and blocked user cannot follow each other.
+func TestBlockFollow(t *testing.T) {
+	defer tests.PrepareTestEnv(t)()
+	doer := unittest.AssertExistsAndLoadBean(t, &user_model.User{ID: 5})
+	blockedUser := unittest.AssertExistsAndLoadBean(t, &user_model.User{ID: 1})
+
+	BlockUser(t, doer, blockedUser)
+
+	// Doer cannot follow blocked user.
+	session := loginUser(t, doer.Name)
+	req := NewRequestWithValues(t, "POST", "/"+blockedUser.Name, map[string]string{
+		"_csrf":  GetCSRF(t, session, "/"+blockedUser.Name),
+		"action": "follow",
+	})
+	session.MakeRequest(t, req, http.StatusSeeOther)
+
+	unittest.AssertNotExistsBean(t, &user_model.Follow{UserID: doer.ID, FollowID: blockedUser.ID})
+
+	// Blocked user cannot follow doer.
+	session = loginUser(t, blockedUser.Name)
+	req = NewRequestWithValues(t, "POST", "/"+doer.Name, map[string]string{
+		"_csrf":  GetCSRF(t, session, "/"+doer.Name),
+		"action": "follow",
+	})
+	session.MakeRequest(t, req, http.StatusSeeOther)
+
+	unittest.AssertNotExistsBean(t, &user_model.Follow{UserID: blockedUser.ID, FollowID: doer.ID})
+}
+
+// TestBlockUserFromOrganization ensures that an organisation can block and unblock an user.
+func TestBlockUserFromOrganization(t *testing.T) {
+	defer tests.PrepareTestEnv(t)()
+
+	doer := unittest.AssertExistsAndLoadBean(t, &user_model.User{ID: 15})
+	blockedUser := unittest.AssertExistsAndLoadBean(t, &user_model.User{ID: 1})
+	org := unittest.AssertExistsAndLoadBean(t, &user_model.User{ID: 17, Type: user_model.UserTypeOrganization})
+	unittest.AssertNotExistsBean(t, &user_model.BlockedUser{BlockID: blockedUser.ID, UserID: org.ID})
+
+	session := loginUser(t, doer.Name)
+	req := NewRequestWithValues(t, "POST", org.OrganisationLink()+"/settings/blocked_users/block", map[string]string{
+		"_csrf": GetCSRF(t, session, org.OrganisationLink()+"/settings/blocked_users"),
+		"uname": blockedUser.Name,
+	})
+	session.MakeRequest(t, req, http.StatusSeeOther)
+	assert.True(t, unittest.BeanExists(t, &user_model.BlockedUser{BlockID: blockedUser.ID, UserID: org.ID}))
+
+	req = NewRequestWithValues(t, "POST", org.OrganisationLink()+"/settings/blocked_users/unblock", map[string]string{
+		"_csrf":   GetCSRF(t, session, org.OrganisationLink()+"/settings/blocked_users"),
+		"user_id": strconv.FormatInt(blockedUser.ID, 10),
+	})
+	session.MakeRequest(t, req, http.StatusSeeOther)
+	unittest.AssertNotExistsBean(t, &user_model.BlockedUser{BlockID: blockedUser.ID, UserID: org.ID})
 }

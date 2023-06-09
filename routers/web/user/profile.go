@@ -5,6 +5,7 @@
 package user
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -369,8 +370,16 @@ func Action(ctx *context.Context) {
 	}
 
 	if err != nil {
-		ctx.ServerError(fmt.Sprintf("Action (%s)", ctx.FormString("action")), err)
-		return
+		if !errors.Is(err, user_model.ErrBlockedByUser) {
+			ctx.ServerError(fmt.Sprintf("Action (%s)", ctx.FormString("action")), err)
+			return
+		}
+
+		if ctx.ContextUser.IsOrganization() {
+			ctx.Flash.Error(ctx.Tr("org.follow_blocked_user"))
+		} else {
+			ctx.Flash.Error(ctx.Tr("user.follow_blocked_user"))
+		}
 	}
 
 	if redirectViaJSON {
