@@ -221,7 +221,6 @@
   box-shadow: none !important;
 }
 .ui.red.label.notification_count,
-.ui.primary.label,
 .ui.primary.labels .label {
   background-color: var(--color-primary-dark-1) !important;
 }
