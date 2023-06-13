@@ -184,6 +184,7 @@
   --color-reaction-active-bg: var(--color-primary-alpha-30);
   --color-header-bar: var(--steel-900);
   --color-label-active-bg: #4c525e;
+  --color-label-text: #fff;
   --color-accent: var(--color-primary-light-1);
   --color-small-accent: var(--color-primary-light-5);
   --color-active-line: #534d1b;
