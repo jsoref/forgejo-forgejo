@@ -79,37 +79,8 @@ endif
 STORED_VERSION_FILE := VERSION
 HUGO_VERSION ?= 0.111.3
 
-GITHUB_REF_TYPE ?= branch
-GITHUB_REF_NAME ?= $(shell git rev-parse --abbrev-ref HEAD)
-
-# backwards compatible to build with Drone
-ifneq ($(DRONE_TAG),)
-	GITHUB_REF_TYPE := tag
-	GITHUB_REF_NAME := $(DRONE_TAG)
-endif
-
-ifneq ($(GITHUB_REF_TYPE),branch)
-	VERSION ?= $(subst v,,$(GITHUB_REF_NAME))
-	GITEA_VERSION ?= $(VERSION)
-else
-	ifneq ($(GITHUB_REF_NAME),)
-		VERSION ?= $(subst release/v,,$(GITHUB_REF_NAME))
-	else
-		VERSION ?= main
-	endif
-
-	STORED_VERSION=$(shell cat $(STORED_VERSION_FILE) 2>/dev/null)
-	ifneq ($(STORED_VERSION),)
-		GITEA_VERSION ?= $(STORED_VERSION)
-	else
-		GITEA_VERSION ?= $(shell git describe --tags --always | sed 's/-/+/' | sed 's/^v//')
-	endif
-endif
-
-# if version = "main" then update version to "nightly"
-ifeq ($(VERSION),main)
-	VERSION := main-nightly
-endif
+GITEA_VERSION ?= $(shell git describe --tags --always | sed 's/-/+/' | sed 's/^v//')
+VERSION = ${GITEA_VERSION}
 
 LDFLAGS := $(LDFLAGS) -X "main.MakeVersion=$(MAKE_VERSION)" -X "main.Version=$(GITEA_VERSION)" -X "main.Tags=$(TAGS)"
 
@@ -825,10 +796,12 @@ security-check:
 	go run $(GOVULNCHECK_PACKAGE) ./...
 
 $(EXECUTABLE): $(GO_SOURCES) $(TAGS_PREREQ)
-	CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build $(GOFLAGS) $(EXTRA_GOFLAGS) -tags '$(TAGS)' -ldflags '-s -w $(LDFLAGS)' -o $@
+	CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build $(GOFLAGS) $(EXTRA_GOFLAGS) -tags 'netgo osusergo $(TAGS)' -ldflags '-s -w -linkmode external -extldflags "-static" $(LDFLAGS)' -o $@
 
 .PHONY: release
 release: frontend generate release-linux release-copy release-compress vendor release-sources release-check
+
+sources-tarbal: vendor release-sources release-check
 
 $(DIST_DIRS):
 	mkdir -p $(DIST_DIRS)

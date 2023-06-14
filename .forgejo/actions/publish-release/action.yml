@@ -1,0 +1,93 @@
+name: 'Publish release'
+author: 'Forgejo authors'
+description: |
+  Publish release
+
+inputs:
+  forgejo:
+    description: 'URL of the Forgejo instance where the release is uploaded'
+    required: true
+  from-owner:
+    description: 'the owner from which a release is to be copied'
+    required: true
+  to-owner:
+    description: 'the owner to which a release is to be copied'
+    required: true
+  repo:
+    description: 'the repository from which a release is to be copied relative to from-owner and to-owner'
+    default: 'forgejo'
+  ref-name:
+    description: 'ref_name of the tag of the release to be copied'
+    required: true
+  doer:
+    description: 'Name of the user authoring the release'
+    required: true
+  token:
+    description: 'application token on FORGEJO with permission to the repository and the packages'
+    required: true
+  gpg-private-key:
+    description: 'GPG Private Key to sign the release artifacts'
+  gpg-passphrase:
+    description: 'Passphrase of the GPG Private Key'
+
+runs:
+  using: "composite"
+  steps:
+    - id: hostport
+      run: |
+         url="${{ inputs.forgejo }}"
+         hostport=${url##http*://}
+         hostport=${hostport%%/}
+         echo "value=$hostport" >> "$GITHUB_OUTPUT"    
+
+    - id: tag-version
+      run: |
+        version="${{ inputs.ref-name }}"
+        version=${version##*v}
+        echo "value=$version" >> "$GITHUB_OUTPUT"
+
+    - name: apt-get install docker.io
+      run: |
+        DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -qq -y docker.io
+
+    - name: download release
+      uses: https://code.forgejo.org/actions/forgejo-release@v1
+      with:
+        url: ${{ inputs.forgejo }}
+        repo: ${{ inputs.from-owner }}/${{ inputs.repo }}
+        direction: download
+        release-dir: release
+        download-retry: 60
+        token: ${{ inputs.token }}
+
+    - name: upload release
+      uses: https://code.forgejo.org/actions/forgejo-release@v1
+      with:
+        url: ${{ inputs.forgejo }}
+        repo: ${{ inputs.to-owner }}/${{ inputs.repo }}
+        direction: upload
+        release-dir: release
+        release-notes: "See https://codeberg.org/forgejo/forgejo/src/branch/forgejo/RELEASE-NOTES.md#${{ steps.tag-version.outputs.value }}"
+        token: ${{ inputs.token }}
+        gpg-private-key: ${{ inputs.gpg-private-key }}
+        gpg-passphrase: ${{ inputs.gpg-passphrase }}
+
+    - name: login to the registry
+      uses: https://github.com/docker/login-action@v2
+      with:
+          registry: ${{ steps.hostport.outputs.value }}
+          username: ${{ inputs.doer }}
+          password: ${{ inputs.token }}
+
+    - uses: https://code.forgejo.org/forgejo/forgejo-container-image@v1
+      env:
+        VERIFY: 'false'
+      with:
+        url: https://${{ steps.hostport.outputs.value }}
+        destination-owner: ${{ inputs.to-owner }}
+        owner: ${{ inputs.from-owner }}
+        suffixes: '-rootless'
+        project: ${{ inputs.repo }}
+        tag: ${{ steps.tag-version.outputs.value }}
+        doer: ${{ inputs.doer }}
+        token: ${{ inputs.token }}

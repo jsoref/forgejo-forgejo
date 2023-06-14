@@ -1,5 +1,6 @@
-#Build stage
-FROM docker.io/library/golang:1.20-alpine3.18 AS build-env
+FROM --platform=$BUILDPLATFORM tonistiigi/xx AS xx
+
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.20-alpine3.18 as build-env
 
 ARG GOPROXY
 ENV GOPROXY ${GOPROXY:-direct}
@@ -9,19 +10,33 @@ ARG TAGS="sqlite sqlite_unlock_notify"
 ENV TAGS "bindata timetzdata $TAGS"
 ARG CGO_EXTRA_CFLAGS
 
-#Build deps
+#
+# Transparently cross compile for the target platform
+#
+COPY --from=xx / /
+ARG TARGETPLATFORM
+RUN apk --no-cache add clang lld
+RUN xx-apk --no-cache add gcc musl-dev
+ENV CGO_ENABLED=1
+RUN xx-go --wrap
+#
+# for go generate and binfmt to find
+# without it the generate phase will fail with
+# #19 25.04 modules/public/public_bindata.go:8: running "go": exit status 1
+# #19 25.39 aarch64-binfmt-P: Could not open '/lib/ld-musl-aarch64.so.1': No such file or directory
+# why exactly is it needed? where is binfmt involved?
+#
+RUN cp /*-alpine-linux-musl*/lib/ld-musl-*.so.1 /lib || true
+
 RUN apk --no-cache add build-base git nodejs npm
 
-#Setup repo
 COPY . ${GOPATH}/src/code.gitea.io/gitea
 WORKDIR ${GOPATH}/src/code.gitea.io/gitea
 
-#Checkout version if set
-RUN if [ -n "${GITEA_VERSION}" ]; then git checkout "${GITEA_VERSION}"; fi \
- && make clean-all build
-
-# Begin env-to-ini build
-RUN go build contrib/environment-to-ini/environment-to-ini.go
+RUN make clean-all
+RUN make frontend
+RUN go build contrib/environment-to-ini/environment-to-ini.go && xx-verify environment-to-ini
+RUN make backend && xx-verify gitea
 
 FROM docker.io/library/alpine:3.18
 LABEL maintainer="contact@forgejo.org"

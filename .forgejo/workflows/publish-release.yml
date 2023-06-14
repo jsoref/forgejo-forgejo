@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: MIT
+name: Pubish release
+
+on: 
+  push:
+    tags: 'v*'
+
+jobs:
+  publish:
+    runs-on: self-hosted
+    if: secrets.DOER != '' && secrets.FORGEJO != '' && secrets.TO_OWNER != '' && secrets.FROM_OWNER != '' && secrets.TOKEN != ''
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: copy & sign binaries and container images from one owner to another
+        uses: ./.forgejo/actions/publish-release
+        with:
+          forgejo: ${{ secrets.FORGEJO }}
+          from-owner: ${{ secrets.FROM_OWNER }}
+          to-owner: ${{ secrets.TO_OWNER }}
+          ref-name: ${{ github.ref_name }}
+          doer: ${{ secrets.DOER }}
+          token: ${{ secrets.TOKEN }}
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
