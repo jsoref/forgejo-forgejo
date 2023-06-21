@@ -171,8 +171,8 @@
   --color-input-toggle-background: #fff;
   --color-input-border: var(--zinc-300);
   --color-input-border-hover: var(--zinc-400);
-  --color-navbar: var(--zinc-50);
-  --color-navbar-transparent: #D2E0F000;
+  --color-header-wrapper: var(--zinc-50);
+  --color-header-wrapper-transparent: #D2E0F000;
   --color-light: #ffffffcc;
   --color-light-mimic-enabled: rgba(0, 0, 0, calc(6 / 255 * 222 / 255 / var(--opacity-disabled)));
   --color-light-border: #0000001d;
@@ -197,7 +197,8 @@
   /* should ideally be --color-text-dark, see #15651 */
   --color-reaction-bg: #0000000a;
   --color-reaction-active-bg: var(--color-primary-alpha-20);
-  --color-header-bar: var(--zinc-100);
+  --color-nav-bg: var(--zinc-100);
+  --color-nav-hover-bg: var(--zinc-100);
   --color-label-active-bg: #4c525e;
   --color-accent: var(--color-primary-light-1);
   --color-small-accent: var(--color-primary-light-5);
