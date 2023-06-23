@@ -79,7 +79,13 @@ endif
 STORED_VERSION_FILE := VERSION
 HUGO_VERSION ?= 0.111.3
 
-GITEA_VERSION ?= $(shell git describe --tags --always | sed 's/-/+/' | sed 's/^v//')
+
+STORED_VERSION=$(shell cat $(STORED_VERSION_FILE) 2>/dev/null)
+ifneq ($(STORED_VERSION),)
+  GITEA_VERSION ?= $(STORED_VERSION)
+else
+  GITEA_VERSION ?= $(shell git describe --tags --always | sed 's/-/+/' | sed 's/^v//')
+endif
 VERSION = ${GITEA_VERSION}
 
 LDFLAGS := $(LDFLAGS) -X "main.MakeVersion=$(MAKE_VERSION)" -X "main.Version=$(GITEA_VERSION)" -X "main.Tags=$(TAGS)"
