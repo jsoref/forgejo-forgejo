@@ -63,7 +63,9 @@ func init() {
 			if setting.OAuth2Client.EnableAutoRegistration {
 				scopes = append(scopes, "user:email")
 			}
-			return github.NewCustomisedURL(clientID, secret, callbackURL, custom.AuthURL, custom.TokenURL, custom.ProfileURL, custom.EmailURL, scopes...), nil
+			provider := github.NewCustomisedURL(clientID, secret, callbackURL, custom.AuthURL, custom.TokenURL, custom.ProfileURL, custom.EmailURL, scopes...)
+			provider.HTTPClient = HTTPClient
+			return provider, nil
 		}))
 
 	RegisterGothProvider(NewCustomProvider(
@@ -73,7 +75,9 @@ func init() {
 			ProfileURL: availableAttribute(gitlab.ProfileURL),
 		}, func(clientID, secret, callbackURL string, custom *CustomURLMapping, scopes []string) (goth.Provider, error) {
 			scopes = append(scopes, "read_user")
-			return gitlab.NewCustomisedURL(clientID, secret, callbackURL, custom.AuthURL, custom.TokenURL, custom.ProfileURL, scopes...), nil
+			provider := gitlab.NewCustomisedURL(clientID, secret, callbackURL, custom.AuthURL, custom.TokenURL, custom.ProfileURL, scopes...)
+			provider.HTTPClient = HTTPClient
+			return provider, nil
 		}))
 
 	RegisterGothProvider(NewCustomProvider(
@@ -83,7 +87,9 @@ func init() {
 			ProfileURL: requiredAttribute(gitea.ProfileURL),
 		},
 		func(clientID, secret, callbackURL string, custom *CustomURLMapping, scopes []string) (goth.Provider, error) {
-			return gitea.NewCustomisedURL(clientID, secret, callbackURL, custom.AuthURL, custom.TokenURL, custom.ProfileURL, scopes...), nil
+			provider := gitea.NewCustomisedURL(clientID, secret, callbackURL, custom.AuthURL, custom.TokenURL, custom.ProfileURL, scopes...)
+			provider.HTTPClient = HTTPClient
+			return provider, nil
 		}))
 
 	RegisterGothProvider(NewCustomProvider(
@@ -93,7 +99,9 @@ func init() {
 			ProfileURL: requiredAttribute(nextcloud.ProfileURL),
 		},
 		func(clientID, secret, callbackURL string, custom *CustomURLMapping, scopes []string) (goth.Provider, error) {
-			return nextcloud.NewCustomisedURL(clientID, secret, callbackURL, custom.AuthURL, custom.TokenURL, custom.ProfileURL, scopes...), nil
+			provider := nextcloud.NewCustomisedURL(clientID, secret, callbackURL, custom.AuthURL, custom.TokenURL, custom.ProfileURL, scopes...)
+			provider.HTTPClient = HTTPClient
+			return provider, nil
 		}))
 
 	RegisterGothProvider(NewCustomProvider(
@@ -101,7 +109,9 @@ func init() {
 			AuthURL: requiredAttribute(mastodon.InstanceURL),
 		},
 		func(clientID, secret, callbackURL string, custom *CustomURLMapping, scopes []string) (goth.Provider, error) {
-			return mastodon.NewCustomisedURL(clientID, secret, callbackURL, custom.AuthURL, scopes...), nil
+			provider := mastodon.NewCustomisedURL(clientID, secret, callbackURL, custom.AuthURL, scopes...)
+			provider.HTTPClient = HTTPClient
+			return provider, nil
 		}))
 
 	RegisterGothProvider(NewCustomProvider(
@@ -114,10 +124,12 @@ func init() {
 				azureScopes[i] = azureadv2.ScopeType(scope)
 			}
 
-			return azureadv2.New(clientID, secret, callbackURL, azureadv2.ProviderOptions{
+			provider := azureadv2.New(clientID, secret, callbackURL, azureadv2.ProviderOptions{
 				Tenant: azureadv2.TenantType(custom.Tenant),
 				Scopes: azureScopes,
-			}), nil
+			})
+			provider.HTTPClient = HTTPClient
+			return provider, nil
 		},
 	))
 }
