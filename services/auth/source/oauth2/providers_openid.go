@@ -43,6 +43,7 @@ func (o *OpenIDProvider) CreateGothProvider(providerName, callbackURL string, so
 	if err != nil {
 		log.Warn("Failed to create OpenID Connect Provider with name '%s' with url '%s': %v", providerName, source.OpenIDConnectAutoDiscoveryURL, err)
 	}
+	provider.HTTPClient = HTTPClient
 	return provider, err
 }
 
