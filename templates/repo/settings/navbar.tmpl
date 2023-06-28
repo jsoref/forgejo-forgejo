@@ -27,7 +27,7 @@
 		<a class="{{if .PageIsSettingsKeys}}active {{end}}item" href="{{.RepoLink}}/settings/keys">
 			{{.locale.Tr "repo.settings.deploy_keys"}}
 		</a>
-		{{if .EnableActions}}
+		{{if and .EnableActions (not .UnitActionsGlobalDisabled) (.Permission.CanRead $.UnitTypeActions)}}
 		<a class="{{if .PageIsSettingsSecrets}}active {{end}}item" href="{{.RepoLink}}/settings/secrets">
 			{{.locale.Tr "secrets.secrets"}}
 		</a>
