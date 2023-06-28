@@ -36,7 +36,7 @@ WORKDIR ${GOPATH}/src/code.gitea.io/gitea
 RUN make clean-all
 RUN make frontend
 RUN go build contrib/environment-to-ini/environment-to-ini.go && xx-verify environment-to-ini
-RUN make backend && xx-verify gitea
+RUN make go-check generate-backend static-executable && xx-verify gitea
 
 FROM docker.io/library/alpine:3.18
 LABEL maintainer="contact@forgejo.org"
