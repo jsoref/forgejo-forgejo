@@ -22,3 +22,11 @@ func MockVariableValue[T any](p *T, v T) (reset func()) {
 	*p = v
 	return func() { *p = old }
 }
+
+func MockVariable[T any](variable *T, mock T) func() {
+	original := *variable
+	*variable = mock
+	return func() {
+		*variable = original
+	}
+}
