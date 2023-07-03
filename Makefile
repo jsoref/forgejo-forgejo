@@ -784,7 +784,7 @@ merge-locales:
 
 .PHONY: security-check
 security-check:
-	go run $(GOVULNCHECK_PACKAGE) -v ./...
+	go run $(GOVULNCHECK_PACKAGE) ./...
 
 $(EXECUTABLE): $(GO_SOURCES) $(TAGS_PREREQ)
 	CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build $(GOFLAGS) $(EXTRA_GOFLAGS) -tags '$(TAGS)' -ldflags '-s -w $(LDFLAGS)' -o $@
