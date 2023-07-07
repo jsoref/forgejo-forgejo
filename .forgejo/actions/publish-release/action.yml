@@ -5,30 +5,33 @@ description: |
 
 inputs:
   forgejo:
-    description: 'URL of the Forgejo instance where the release is uploaded'
+    description: 'URL of the Forgejo instance where the release is uploaded (e.g. https://codeberg.org)'
     required: true
   from-owner:
-    description: 'the owner from which a release is to be copied'
+    description: 'the owner from which a release is to be copied (e.g forgejo-integration)'
     required: true
   to-owner:
-    description: 'the owner to which a release is to be copied'
+    description: 'the owner to which a release is to be copied (e.g. forgejo-experimental). It has be an organization in which doer has the required permissions. Or be the same as the doer'
     required: true
   repo:
     description: 'the repository from which a release is to be copied relative to from-owner and to-owner'
     default: 'forgejo'
   ref-name:
-    description: 'ref_name of the tag of the release to be copied'
+    description: 'ref_name of the tag of the release to be copied (e.g. github.ref_name)'
     required: true
   doer:
-    description: 'Name of the user authoring the release'
+    description: 'Name of the user authoring the release (e.g. release-team). The user must be authorized to create packages in to-owner and releases in to-owner/repo'
     required: true
   token:
-    description: 'application token on FORGEJO with permission to the repository and the packages'
+    description: 'application token created on forgejo by the doer, with a scope allowing it to create packages in to-owner and releases in to-owner/repo'
     required: true
   gpg-private-key:
     description: 'GPG Private Key to sign the release artifacts'
   gpg-passphrase:
     description: 'Passphrase of the GPG Private Key'
+  verbose:
+    description: 'Increase the verbosity level'
+    default: 'false'
 
 runs:
   using: "composite"
@@ -59,6 +62,7 @@ runs:
         release-dir: release
         download-retry: 60
         token: ${{ inputs.token }}
+        verbose: ${{ inputs.verbose }}
 
     - name: upload release
       uses: https://code.forgejo.org/actions/forgejo-release@v1
@@ -71,6 +75,7 @@ runs:
         token: ${{ inputs.token }}
         gpg-private-key: ${{ inputs.gpg-private-key }}
         gpg-passphrase: ${{ inputs.gpg-passphrase }}
+        verbose: ${{ inputs.verbose }}
 
     - name: login to the registry
       uses: https://github.com/docker/login-action@v2
@@ -91,3 +96,4 @@ runs:
         tag: ${{ steps.tag-version.outputs.value }}
         doer: ${{ inputs.doer }}
         token: ${{ inputs.token }}
+        verbose: ${{ inputs.verbose }}
