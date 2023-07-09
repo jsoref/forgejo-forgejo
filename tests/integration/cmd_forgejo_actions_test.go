@@ -16,7 +16,12 @@ func Test_CmdForgejo_Actions(t *testing.T) {
 	onGiteaRun(t, func(*testing.T, *url.URL) {
 		defer test.MockVariable(&setting.Actions.Enabled, true)()
 
-		output := cmdForgejoCaptureOutput(t, []string{"forgejo-cli", "actions", "generate-runner-token"})
+		var output string
+
+		output = cmdForgejoCaptureOutput(t, []string{"forgejo-cli", "actions", "generate-runner-token"})
+		assert.EqualValues(t, 40, len(output))
+
+		output = cmdForgejoCaptureOutput(t, []string{"forgejo-cli", "actions", "generate-secret"})
 		assert.EqualValues(t, 40, len(output))
 	})
 }
