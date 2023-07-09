@@ -28,10 +28,12 @@ const (
 
 func CmdForgejo(ctx context.Context) cli.Command {
 	return cli.Command{
-		Name:        "forgejo-cli",
-		Usage:       "Forgejo CLI",
-		Flags:       []cli.Flag{},
-		Subcommands: []cli.Command{},
+		Name:  "forgejo-cli",
+		Usage: "Forgejo CLI",
+		Flags: []cli.Flag{},
+		Subcommands: []cli.Command{
+			CmdActions(ctx),
+		},
 	}
 }
 
