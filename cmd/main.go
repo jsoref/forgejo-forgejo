@@ -4,10 +4,13 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
+	"code.gitea.io/gitea/cmd/forgejo"
 	"code.gitea.io/gitea/modules/log"
 	"code.gitea.io/gitea/modules/setting"
 	"code.gitea.io/gitea/modules/util"
@@ -119,6 +122,36 @@ func prepareWorkPathAndCustomConf(action cli.ActionFunc) func(ctx *cli.Context) 
 }
 
 func NewMainApp(version, versionExtra string) *cli.App {
+	path, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	executable := filepath.Base(path)
+
+	var subCmdsStandalone []*cli.Command = make([]*cli.Command, 0, 10)
+	var subCmdWithConfig []*cli.Command = make([]*cli.Command, 0, 10)
+
+	//
+	// If the executable is forgejo-cli, provide a Forgejo specific CLI
+	// that is NOT compatible with Gitea.
+	//
+	if executable == "forgejo-cli" {
+		subCmdsStandalone = append(subCmdsStandalone, forgejo.CmdActions(context.Background()))
+	} else {
+		//
+		// Otherwise provide a Gitea compatible CLI which includes Forgejo
+		// specific additions under the forgejo-cli subcommand. It allows
+		// admins to migration from Gitea to Forgejo by replacing the gitea
+		// binary and rename it to forgejo if they want.
+		//
+		subCmdsStandalone = append(subCmdsStandalone, forgejo.CmdForgejo(context.Background()))
+		subCmdWithConfig = append(subCmdWithConfig, CmdActions)
+	}
+
+	return innerNewMainApp(version, versionExtra, subCmdsStandalone, subCmdWithConfig)
+}
+
+func innerNewMainApp(version, versionExtra string, subCmdsStandaloneArgs, subCmdWithConfigArgs []*cli.Command) *cli.App {
 	app := cli.NewApp()
 	app.Name = "Gitea"
 	app.Usage = "A painless self-hosted Git service"
@@ -141,13 +174,13 @@ func NewMainApp(version, versionExtra string) *cli.App {
 		CmdMigrateStorage,
 		CmdDumpRepository,
 		CmdRestoreRepository,
-		CmdActions,
 		cmdHelp(), // the "help" sub-command was used to show the more information for "work path" and "custom config"
 	}
 
 	cmdConvert := util.ToPointer(*cmdDoctorConvert)
 	cmdConvert.Hidden = true // still support the legacy "./gitea doctor" by the hidden sub-command, remove it in next release
 	subCmdWithConfig = append(subCmdWithConfig, cmdConvert)
+	subCmdWithConfig = append(subCmdWithConfig, subCmdWithConfigArgs...)
 
 	// these sub-commands do not need the config file, and they do not depend on any path or environment variable.
 	subCmdStandalone := []*cli.Command{
@@ -155,6 +188,7 @@ func NewMainApp(version, versionExtra string) *cli.App {
 		CmdGenerate,
 		CmdDocs,
 	}
+	subCmdStandalone = append(subCmdStandalone, subCmdsStandaloneArgs...)
 
 	app.DefaultCommand = CmdWeb.Name
 
