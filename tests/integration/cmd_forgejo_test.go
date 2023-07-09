@@ -17,7 +17,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-func cmdForgejoCaptureOutput(t *testing.T, args []string) (string, error) {
+func cmdForgejoCaptureOutput(t *testing.T, args []string, stdin ...string) (string, error) {
 	r, w, err := os.Pipe()
 	assert.NoError(t, err)
 	set := flag.NewFlagSet("forgejo-cli", 0)
