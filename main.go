@@ -6,13 +6,16 @@
 package main // import "code.gitea.io/gitea"
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
 
 	"code.gitea.io/gitea/cmd"
+	"code.gitea.io/gitea/cmd/forgejo"
 	"code.gitea.io/gitea/modules/log"
 	"code.gitea.io/gitea/modules/setting"
 
@@ -81,6 +84,39 @@ DEFAULT CONFIGURATION:
 }
 
 func main() {
+	path, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	executable := filepath.Base(path)
+
+	var subCmds []cli.Command
+
+	//
+	// If the executable is forgejo-cli, provide a Forgejo specific CLI
+	// that is NOT compatible with Gitea.
+	//
+	if executable == "forgejo-cli" {
+		subCmds = []cli.Command{
+			forgejo.CmdActions(context.Background()),
+		}
+	} else {
+		//
+		// Otherwise provide a Gitea compatible CLI which includes Forgejo
+		// specific additions under the forgejo-cli subcommand. It allows
+		// admins to migration from Gitea to Forgejo by replacing the gitea
+		// binary and rename it to forgejo if they want.
+		//
+		subCmds = []cli.Command{
+			forgejo.CmdForgejo(context.Background()),
+			cmd.CmdActions,
+		}
+	}
+
+	mainApp(subCmds...)
+}
+
+func mainApp(subCmds ...cli.Command) {
 	app := cli.NewApp()
 	app.Name = "Gitea"
 	app.Usage = "A painless self-hosted Git service"
@@ -104,9 +140,9 @@ func main() {
 		cmd.CmdMigrateStorage,
 		cmd.CmdDumpRepository,
 		cmd.CmdRestoreRepository,
-		cmd.CmdActions,
 		cmdHelp, // TODO: the "help" sub-command was used to show the more information for "work path" and "custom config", in the future, it should avoid doing so
 	}
+	subCmdWithIni = append(subCmdWithIni, subCmds...)
 	// these sub-commands do not need the config file, and they do not depend on any path or environment variable.
 	subCmdStandalone := []cli.Command{
 		cmd.CmdCert,
