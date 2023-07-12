@@ -34,7 +34,7 @@ jobs:
     runs-on: docker
     needs: [lint-backend, checks-backend]
     container:
-      image: codeberg.org/forgejo/test_env:main
+      image: codeberg.org/forgejo/test_env:1.20
     steps:
       - uses: https://code.forgejo.org/actions/checkout@v3
       - uses: https://code.forgejo.org/actions/setup-go@v4
@@ -59,7 +59,7 @@ jobs:
     runs-on: docker
     needs: [lint-backend, checks-backend]
     container:
-      image: codeberg.org/forgejo/test_env:main
+      image: codeberg.org/forgejo/test_env:1.20
     services:
       mysql8:
         image: mysql:8-debian
@@ -96,7 +96,7 @@ jobs:
     runs-on: docker
     needs: [lint-backend, checks-backend]
     container:
-      image: codeberg.org/forgejo/test_env:main
+      image: codeberg.org/forgejo/test_env:1.20
     services:
       pgsql:
         image: postgres:15
@@ -131,7 +131,7 @@ jobs:
     runs-on: docker
     needs: [lint-backend, checks-backend]
     container:
-      image: codeberg.org/forgejo/test_env:main
+      image: codeberg.org/forgejo/test_env:1.20
     steps:
       - uses: https://code.forgejo.org/actions/checkout@v3
       - uses: https://code.forgejo.org/actions/setup-go@v4
