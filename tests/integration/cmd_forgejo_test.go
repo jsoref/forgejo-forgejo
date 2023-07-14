@@ -24,7 +24,7 @@ func cmdForgejoCaptureOutput(t *testing.T, args []string, stdin ...string) (stri
 	assert.NoError(t, set.Parse(args))
 	cliContext := cli.NewContext(&cli.App{Writer: w, ErrWriter: w}, set, nil)
 	ctx := context.Background()
-	ctx = forgejo.ContextSetNoInstallSignals(ctx, true)
+	ctx = forgejo.ContextSetNoInit(ctx, true)
 	ctx = forgejo.ContextSetNoExit(ctx, true)
 	ctx = forgejo.ContextSetStdout(ctx, w)
 	ctx = forgejo.ContextSetStderr(ctx, w)

@@ -11,7 +11,10 @@ import (
 	"os/signal"
 	"syscall"
 
+	"code.gitea.io/gitea/models/db"
+	"code.gitea.io/gitea/modules/log"
 	"code.gitea.io/gitea/modules/private"
+	"code.gitea.io/gitea/modules/setting"
 
 	"github.com/urfave/cli"
 )
@@ -19,7 +22,7 @@ import (
 type key int
 
 const (
-	noInstallSignalsKey key = iota + 1
+	noInitKey key = iota + 1
 	noExitKey
 	stdoutKey
 	stderrKey
@@ -37,12 +40,12 @@ func CmdForgejo(ctx context.Context) cli.Command {
 	}
 }
 
-func ContextSetNoInstallSignals(ctx context.Context, value bool) context.Context {
-	return context.WithValue(ctx, noInstallSignalsKey, value)
+func ContextSetNoInit(ctx context.Context, value bool) context.Context {
+	return context.WithValue(ctx, noInitKey, value)
 }
 
-func ContextGetNoInstallSignals(ctx context.Context) bool {
-	value, ok := ctx.Value(noInstallSignalsKey).(bool)
+func ContextGetNoInit(ctx context.Context) bool {
+	value, ok := ctx.Value(noInitKey).(bool)
 	return ok && value
 }
 
@@ -91,6 +94,24 @@ func ContextGetStdin(ctx context.Context) io.Reader {
 	return value
 }
 
+// copied from ../cmd.go
+func initDB(ctx context.Context) error {
+	setting.MustInstalled()
+	setting.LoadDBSetting()
+	setting.InitSQLLoggersForCli(log.INFO)
+
+	if setting.Database.Type == "" {
+		log.Fatal(`Database settings are missing from the configuration file: %q.
+Ensure you are running in the correct environment or set the correct configuration file with -c.
+If this is the intended configuration file complete the [database] section.`, setting.CustomConf)
+	}
+	if err := db.InitEngine(ctx); err != nil {
+		return fmt.Errorf("unable to initialize the database using the configuration in %q. Error: %w", setting.CustomConf, err)
+	}
+	return nil
+}
+
+// copied from ../cmd.go
 func installSignals(ctx context.Context) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(ctx)
 	go func() {
