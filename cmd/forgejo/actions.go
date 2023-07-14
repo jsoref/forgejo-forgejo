@@ -190,7 +190,7 @@ func RunGenerateSecret(ctx context.Context, cliCtx *cli.Context) error {
 }
 
 func RunGenerateActionsRunnerToken(ctx context.Context, cliCtx *cli.Context) error {
-	if !ContextGetNoInstallSignals(ctx) {
+	if !ContextGetNoInit(ctx) {
 		var cancel context.CancelFunc
 		ctx, cancel = installSignals(ctx)
 		defer cancel()
