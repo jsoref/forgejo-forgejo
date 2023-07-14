@@ -1,4 +1,5 @@
-<div class="ui top attached pull tabular stackable menu">
+<div class="ui pull tabs container">
+	<div class="ui top attached pull tabular menu">
 	<a class="item {{if .PageIsPullConversation}}active{{end}}" href="{{.Issue.Link}}">
 		{{svg "octicon-comment-discussion"}}
 		{{$.locale.Tr "repo.pulls.tab_conversation"}}
@@ -14,4 +15,6 @@
 		{{$.locale.Tr "repo.pulls.tab_files"}}
 		<span class="ui small label">{{if .NumFiles}}{{.NumFiles}}{{else}}-{{end}}</span>
 	</a>
+</div>
+<div class="ui tabs divider"></div>
 </div>
