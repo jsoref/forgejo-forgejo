@@ -14,6 +14,7 @@ import (
 	actions_model "code.gitea.io/gitea/models/actions"
 	"code.gitea.io/gitea/modules/private"
 	"code.gitea.io/gitea/modules/setting"
+	private_routers "code.gitea.io/gitea/routers/private"
 
 	"github.com/urfave/cli"
 )
@@ -129,10 +130,14 @@ func validateSecret(secret string) error {
 }
 
 func RunRegister(ctx context.Context, cliCtx *cli.Context) error {
-	if !ContextGetNoInstallSignals(ctx) {
+	if !ContextGetNoInit(ctx) {
 		var cancel context.CancelFunc
 		ctx, cancel = installSignals(ctx)
 		defer cancel()
+
+		if err := initDB(ctx); err != nil {
+			return err
+		}
 	}
 	setting.MustInstalled()
 
@@ -165,12 +170,17 @@ func RunRegister(ctx context.Context, cliCtx *cli.Context) error {
 	// the internal naming. It is still confusing to the developer but
 	// not to the user.
 	//
-	respText, extra := private.ActionsRunnerRegister(ctx, secret, scope, strings.Split(labels, ","), name, version)
-	if extra.HasError() {
-		return handleCliResponseExtra(ctx, extra)
+	owner, repo, err := private_routers.ParseScope(ctx, scope)
+	if err != nil {
+		return err
 	}
 
-	if _, err := fmt.Fprintf(ContextGetStdout(ctx), "%s", respText); err != nil {
+	runner, err := actions_model.RegisterRunner(ctx, owner, repo, secret, strings.Split(labels, ","), name, version)
+	if err != nil {
+		return fmt.Errorf("error while registering runner: %v", err)
+	}
+
+	if _, err := fmt.Fprintf(ContextGetStdout(ctx), "%s", runner.UUID); err != nil {
 		panic(err)
 	}
 	return nil

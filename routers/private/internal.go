@@ -56,7 +56,6 @@ func Routes() *web.Route {
 	// Since internal API will be sent only from Gitea sub commands and it's under control (checked by InternalToken), we can trust the headers.
 	r.Use(chi_middleware.RealIP)
 
-	r.Post("/actions/register", ActionsRunnerRegister)
 	r.Post("/ssh/authorized_keys", AuthorizedPublicKeyByContent)
 	r.Post("/ssh/{id}/update/{repoid}", UpdatePublicKeyInRepo)
 	r.Post("/ssh/log", bind(private.SSHLogOption{}), SSHLog)
