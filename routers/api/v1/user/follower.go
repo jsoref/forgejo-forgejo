@@ -5,6 +5,7 @@
 package user
 
 import (
+	"errors"
 	"net/http"
 
 	user_model "code.gitea.io/gitea/models/user"
@@ -217,8 +218,14 @@ func Follow(ctx *context.APIContext) {
 	// responses:
 	//   "204":
 	//     "$ref": "#/responses/empty"
+	//   "403":
+	//     "$ref": "#/responses/forbidden"
 
-	if err := user_model.FollowUser(ctx.Doer.ID, ctx.ContextUser.ID); err != nil {
+	if err := user_model.FollowUser(ctx, ctx.Doer.ID, ctx.ContextUser.ID); err != nil {
+		if errors.Is(err, user_model.ErrBlockedByUser) {
+			ctx.Error(http.StatusForbidden, "BlockedByUser", err)
+			return
+		}
 		ctx.Error(http.StatusInternalServerError, "FollowUser", err)
 		return
 	}
@@ -240,7 +247,7 @@ func Unfollow(ctx *context.APIContext) {
 	//   "204":
 	//     "$ref": "#/responses/empty"
 
-	if err := user_model.UnfollowUser(ctx.Doer.ID, ctx.ContextUser.ID); err != nil {
+	if err := user_model.UnfollowUser(ctx, ctx.Doer.ID, ctx.ContextUser.ID); err != nil {
 		ctx.Error(http.StatusInternalServerError, "UnfollowUser", err)
 		return
 	}

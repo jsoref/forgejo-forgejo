@@ -1,0 +1,31 @@
+{{template "user/settings/layout_head" (dict "ctxData" . "pageClass" "user settings blocked_users")}}
+	<div class="user-setting-content">
+		<h4 class="ui top attached header">
+			{{.locale.Tr "settings.blocked_users"}}
+		</h4>
+		<div class="ui attached segment">
+			<div class="ui blocked-user list gt-mt-0">
+				{{range .BlockedUsers}}
+					<div class="item gt-df gt-ac">
+						{{avatar $.Context . 28 "gt-mr-3"}}
+						<div class="gt-df gt-fc">
+							<a href="{{.HomeLink}}">{{.Name}}</a>
+							<i class="gt-mt-2">{{$.locale.Tr "settings.blocked_since" (DateTime "short" .CreatedUnix) | Safe}}</i>
+						</div>
+						<div class="gt-ml-auto content">
+							<form action="{{$.Link}}/unblock" method="post">
+								{{$.CsrfTokenHtml}}
+								<input type="hidden" name="user_id" value="{{.ID}}">
+								<button class="ui red button">{{$.locale.Tr "user.unblock"}}</button>
+							</form>
+						</div>
+					</div>
+				{{else}}
+					<div class="item">
+						<span class="text grey italic">{{$.locale.Tr "settings.blocked_users_none"}}</span>
+					</div>
+				{{end}}
+			</div>
+		</div>
+	</div>
+{{template "user/settings/layout_footer" .}}

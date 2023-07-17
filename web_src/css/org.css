@@ -191,30 +191,35 @@
 }
 
 .organization.teams .repositories .item,
-.organization.teams .members .item {
+.organization.teams .members .item,
+.organization.settings .blocked-users .item {
   padding: 10px 19px;
 }
 
 .organization.teams .repositories .item:not(:last-child),
-.organization.teams .members .item:not(:last-child) {
+.organization.teams .members .item:not(:last-child),
+.organization.settings .blocked-users .item:not(:last-child) {
   border-bottom: 1px solid var(--color-secondary);
 }
 
 .organization.teams .repositories .item .button,
-.organization.teams .members .item .button {
+.organization.teams .members .item .button,
+.organization.settings .blocked-users .item button {
   padding: 9px 10px;
   margin: 0;
 }
 
 .organization.teams #add-repo-form input,
 .organization.teams #repo-multiple-form input,
-.organization.teams #add-member-form input {
+.organization.teams #add-member-form input,
+.organization.settings #block-user-form input {
   margin-left: 0;
 }
 
 .organization.teams #add-repo-form .ui.button,
 .organization.teams #repo-multiple-form .ui.button,
-.organization.teams #add-member-form .ui.button {
+.organization.teams #add-member-form .ui.button,
+.organization.settings #block-user-form .ui.button {
   margin-left: 5px;
   margin-top: -3px;
 }

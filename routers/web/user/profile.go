@@ -5,6 +5,7 @@
 package user
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -23,6 +24,7 @@ import (
 	"code.gitea.io/gitea/modules/util"
 	"code.gitea.io/gitea/routers/web/feed"
 	"code.gitea.io/gitea/routers/web/org"
+	user_service "code.gitea.io/gitea/services/user"
 )
 
 // Profile render user's profile page
@@ -58,8 +60,10 @@ func Profile(ctx *context.Context) {
 	}
 
 	var isFollowing bool
+	var isBlocked bool
 	if ctx.Doer != nil {
 		isFollowing = user_model.IsFollowing(ctx.Doer.ID, ctx.ContextUser.ID)
+		isBlocked = user_model.IsBlocked(ctx, ctx.Doer.ID, ctx.ContextUser.ID)
 	}
 
 	ctx.Data["Title"] = ctx.ContextUser.DisplayName()
@@ -67,6 +71,7 @@ func Profile(ctx *context.Context) {
 	ctx.Data["ContextUser"] = ctx.ContextUser
 	ctx.Data["OpenIDs"] = openIDs
 	ctx.Data["IsFollowing"] = isFollowing
+	ctx.Data["IsBlocked"] = isBlocked
 
 	if setting.Service.EnableUserHeatmap {
 		data, err := activities_model.GetUserHeatmapDataByUser(ctx.ContextUser, ctx.Doer)
@@ -351,17 +356,39 @@ func Profile(ctx *context.Context) {
 // Action response for follow/unfollow user request
 func Action(ctx *context.Context) {
 	var err error
+	var redirectViaJSON bool
 	switch ctx.FormString("action") {
 	case "follow":
-		err = user_model.FollowUser(ctx.Doer.ID, ctx.ContextUser.ID)
+		err = user_model.FollowUser(ctx, ctx.Doer.ID, ctx.ContextUser.ID)
 	case "unfollow":
-		err = user_model.UnfollowUser(ctx.Doer.ID, ctx.ContextUser.ID)
+		err = user_model.UnfollowUser(ctx, ctx.Doer.ID, ctx.ContextUser.ID)
+	case "block":
+		err = user_service.BlockUser(ctx, ctx.Doer.ID, ctx.ContextUser.ID)
+		redirectViaJSON = true
+	case "unblock":
+		err = user_model.UnblockUser(ctx, ctx.Doer.ID, ctx.ContextUser.ID)
 	}
 
 	if err != nil {
-		ctx.ServerError(fmt.Sprintf("Action (%s)", ctx.FormString("action")), err)
+		if !errors.Is(err, user_model.ErrBlockedByUser) {
+			ctx.ServerError(fmt.Sprintf("Action (%s)", ctx.FormString("action")), err)
+			return
+		}
+
+		if ctx.ContextUser.IsOrganization() {
+			ctx.Flash.Error(ctx.Tr("org.follow_blocked_user"))
+		} else {
+			ctx.Flash.Error(ctx.Tr("user.follow_blocked_user"))
+		}
+	}
+
+	if redirectViaJSON {
+		ctx.JSON(http.StatusOK, map[string]interface{}{
+			"redirect": ctx.ContextUser.HomeLink(),
+		})
 		return
 	}
+
 	// FIXME: We should check this URL and make sure that it's a valid Gitea URL
 	ctx.RedirectToFirst(ctx.FormString("redirect_to"), ctx.ContextUser.HomeLink())
 }

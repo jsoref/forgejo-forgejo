@@ -202,3 +202,80 @@ func ListUserActivityFeeds(ctx *context.APIContext) {
 
 	ctx.JSON(http.StatusOK, convert.ToActivities(ctx, feeds, ctx.Doer))
 }
+
+// ListBlockedUsers list the authenticated user's blocked users.
+func ListBlockedUsers(ctx *context.APIContext) {
+	// swagger:operation GET /user/list_blocked user userListBlockedUsers
+	// ---
+	// summary: List the authenticated user's blocked users
+	// produces:
+	// - application/json
+	// parameters:
+	// - name: page
+	//   in: query
+	//   description: page number of results to return (1-based)
+	//   type: integer
+	// - name: limit
+	//   in: query
+	//   description: page size of results
+	//   type: integer
+	// responses:
+	//   "200":
+	//     "$ref": "#/responses/BlockedUserList"
+
+	utils.ListUserBlockedUsers(ctx, ctx.Doer)
+}
+
+// BlockUser blocks a user from the doer.
+func BlockUser(ctx *context.APIContext) {
+	// swagger:operation PUT /user/block/{username} user userBlockUser
+	// ---
+	// summary: Blocks a user from the doer.
+	// produces:
+	// - application/json
+	// parameters:
+	// - name: username
+	//   in: path
+	//   description: username of the user
+	//   type: string
+	//   required: true
+	// responses:
+	//   "204":
+	//     "$ref": "#/responses/empty"
+	//   "404":
+	//     "$ref": "#/responses/notFound"
+
+	user := GetUserByParams(ctx)
+	if ctx.Written() {
+		return
+	}
+
+	utils.BlockUser(ctx, ctx.Doer, user)
+}
+
+// UnblockUser unblocks a user from the doer.
+func UnblockUser(ctx *context.APIContext) {
+	// swagger:operation PUT /user/unblock/{username} user userUnblockUser
+	// ---
+	// summary: Unblocks a user from the doer.
+	// produces:
+	// - application/json
+	// parameters:
+	// - name: username
+	//   in: path
+	//   description: username of the user
+	//   type: string
+	//   required: true
+	// responses:
+	//   "204":
+	//     "$ref": "#/responses/empty"
+	//   "404":
+	//     "$ref": "#/responses/notFound"
+
+	user := GetUserByParams(ctx)
+	if ctx.Written() {
+		return
+	}
+
+	utils.UnblockUser(ctx, ctx.Doer, user)
+}

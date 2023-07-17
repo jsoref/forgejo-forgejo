@@ -35,6 +35,9 @@
 			</div>
 		</details>
 		{{end}}
+			<a class="{{if .PageIsSettingsBlockedUsers}}active {{end}}item" href="{{.OrgLink}}/settings/blocked_users">
+			{{.locale.Tr "settings.blocked_users"}}
+		</a>
 		<a class="{{if .PageIsSettingsDelete}}active {{end}}item" href="{{.OrgLink}}/settings/delete">
 			{{.locale.Tr "org.settings.delete"}}
 		</a>

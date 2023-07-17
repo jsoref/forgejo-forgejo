@@ -449,13 +449,19 @@ func TestFollowUser(t *testing.T) {
 	assert.NoError(t, unittest.PrepareTestDatabase())
 
 	testSuccess := func(followerID, followedID int64) {
-		assert.NoError(t, user_model.FollowUser(followerID, followedID))
+		assert.NoError(t, user_model.FollowUser(db.DefaultContext, followerID, followedID))
 		unittest.AssertExistsAndLoadBean(t, &user_model.Follow{UserID: followerID, FollowID: followedID})
 	}
 	testSuccess(4, 2)
 	testSuccess(5, 2)
 
-	assert.NoError(t, user_model.FollowUser(2, 2))
+	assert.NoError(t, user_model.FollowUser(db.DefaultContext, 2, 2))
+
+	// Blocked user.
+	assert.ErrorIs(t, user_model.ErrBlockedByUser, user_model.FollowUser(db.DefaultContext, 1, 4))
+	assert.ErrorIs(t, user_model.ErrBlockedByUser, user_model.FollowUser(db.DefaultContext, 4, 1))
+	unittest.AssertNotExistsBean(t, &user_model.Follow{UserID: 1, FollowID: 4})
+	unittest.AssertNotExistsBean(t, &user_model.Follow{UserID: 4, FollowID: 1})
 
 	unittest.CheckConsistencyFor(t, &user_model.User{})
 }
@@ -464,7 +470,7 @@ func TestUnfollowUser(t *testing.T) {
 	assert.NoError(t, unittest.PrepareTestDatabase())
 
 	testSuccess := func(followerID, followedID int64) {
-		assert.NoError(t, user_model.UnfollowUser(followerID, followedID))
+		assert.NoError(t, user_model.UnfollowUser(db.DefaultContext, followerID, followedID))
 		unittest.AssertNotExistsBean(t, &user_model.Follow{UserID: followerID, FollowID: followedID})
 	}
 	testSuccess(4, 2)
