@@ -83,6 +83,14 @@ DEFAULT CONFIGURATION:
 	},
 }
 
+func forgejoEnv() {
+	for _, k := range []string{"CUSTOM", "WORK_DIR"} {
+		if v, ok := os.LookupEnv("FORGEJO_" + k); ok {
+			os.Setenv("GITEA_"+k, v)
+		}
+	}
+}
+
 func main() {
 	path, err := os.Executable()
 	if err != nil {
@@ -117,10 +125,12 @@ func main() {
 }
 
 func mainApp(subCmds ...cli.Command) {
+	forgejoEnv()
 	app := cli.NewApp()
-	app.Name = "Gitea"
-	app.Usage = "A painless self-hosted Git service"
-	app.Description = `By default, Gitea will start serving using the web-server with no argument, which can alternatively be run by running the subcommand "web".`
+	app.Name = "Forgejo"
+	app.Usage = "Beyond coding. We forge."
+	app.Description = `By default, forgejo will start serving using the web-server with no
+argument - which can alternatively be run by running the subcommand web.`
 	app.Version = Version + formatBuiltWith()
 	app.EnableBashCompletion = true
 

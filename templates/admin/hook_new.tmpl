@@ -11,8 +11,10 @@
 				{{.locale.Tr "admin.defaulthooks.update_webhook"}}
 			{{end}}
 			<div class="ui right">
-				{{if eq .HookType "gitea"}}
-					<img width="26" height="26" src="{{AssetUrlPrefix}}/img/gitea.svg">
+				{{if eq .HookType "forgejo"}}
+					<img width="26" height="26" src="{{AssetUrlPrefix}}/img/forgejo.svg">
+				{{else if eq .HookType "gitea"}}
+					<img width="26" height="26" src="{{AssetUrlPrefix}}/img/gitea-original.svg">
 				{{else if eq .HookType "gogs"}}
 					<img width="26" height="26" src="{{AssetUrlPrefix}}/img/gogs.ico">
 				{{else if eq .HookType "slack"}}
@@ -37,6 +39,7 @@
 			</div>
 		</h4>
 		<div class="ui attached segment">
+			{{template "repo/settings/webhook/forgejo" .}}
 			{{template "repo/settings/webhook/gitea" .}}
 			{{template "repo/settings/webhook/gogs" .}}
 			{{template "repo/settings/webhook/slack" .}}
