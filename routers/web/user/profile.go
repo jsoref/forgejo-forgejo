@@ -120,6 +120,7 @@ func Profile(ctx *context.Context) {
 			profileContent, err := markdown.RenderString(&markup.RenderContext{
 				Ctx:     ctx,
 				GitRepo: gitRepo,
+				Metas:   map[string]string{"mode": "document"},
 			}, bytes)
 			if err != nil {
 				ctx.ServerError("RenderString", err)
