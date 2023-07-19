@@ -5,6 +5,7 @@ package setting
 
 import (
 	"fmt"
+	"strings"
 )
 
 // Actions settings
@@ -13,11 +14,30 @@ var (
 		LogStorage        *Storage // how the created logs should be stored
 		ArtifactStorage   *Storage // how the created artifacts should be stored
 		Enabled           bool
-		DefaultActionsURL string `ini:"DEFAULT_ACTIONS_URL"`
+		DefaultActionsURL defaultActionsURL `ini:"DEFAULT_ACTIONS_URL"`
 	}{
 		Enabled:           false,
-		DefaultActionsURL: "https://code.forgejo.org",
+		DefaultActionsURL: defaultActionsURLForgejo,
 	}
+)
+
+type defaultActionsURL string
+
+func (url defaultActionsURL) URL() string {
+	switch url {
+	case defaultActionsURLGitHub:
+		return "https://github.com"
+	case defaultActionsURLSelf:
+		return strings.TrimSuffix(AppURL, "/")
+	default:
+		return string(url)
+	}
+}
+
+const (
+	defaultActionsURLForgejo = "https://code.forgejo.org"
+	defaultActionsURLGitHub  = "github" // https://github.com
+	defaultActionsURLSelf    = "self"   // the root URL of the self-hosted instance
 )
 
 func loadActionsFrom(rootCfg ConfigProvider) error {
