@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
+	"time"
 
 	"code.gitea.io/gitea/models/db"
 	system_model "code.gitea.io/gitea/models/system"
@@ -36,6 +37,8 @@ type Task struct {
 	LastMessage string
 	LastDoer    string
 	ExecTimes   int64
+	// This stores the time of the last manual run of this task.
+	LastRun time.Time
 }
 
 // DoRunAtStart returns if this task should run at the start
@@ -87,6 +90,12 @@ func (t *Task) RunWithUser(doer *user_model.User, config Config) {
 		}
 	}()
 	graceful.GetManager().RunWithShutdownContext(func(baseCtx context.Context) {
+		// Store the time of this run, before the function is executed, so it
+		// matches the behavior of what the cron library does.
+		t.lock.Lock()
+		t.LastRun = time.Now()
+		t.lock.Unlock()
+
 		pm := process.GetManager()
 		doerName := ""
 		if doer != nil && doer.ID != -1 {
