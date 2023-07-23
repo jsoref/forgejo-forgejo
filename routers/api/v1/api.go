@@ -757,7 +757,6 @@ func Routes(ctx gocontext.Context) *web.Route {
 			}, tokenRequiresScopes(auth_model.AccessTokenScopeCategoryActivityPub))
 		}
 
-		// Misc (requires 'misc' scope)
 		m.Group("", func() {
 			m.Get("/version", misc.Version)
 			m.Get("/signing-key.gpg", misc.SigningKey)
@@ -777,7 +776,7 @@ func Routes(ctx gocontext.Context) *web.Route {
 				m.Get("/attachment", settings.GetGeneralAttachmentSettings)
 				m.Get("/repository", settings.GetGeneralRepoSettings)
 			})
-		}, tokenRequiresScopes(auth_model.AccessTokenScopeCategoryMisc))
+		})
 
 		// Notifications (requires 'notifications' scope)
 		m.Group("/notifications", func() {
