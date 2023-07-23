@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"testing"
 
+	auth_model "code.gitea.io/gitea/models/auth"
 	"code.gitea.io/gitea/modules/setting"
 	"code.gitea.io/gitea/modules/structs"
 	"code.gitea.io/gitea/tests"
@@ -24,4 +25,15 @@ func TestVersion(t *testing.T) {
 	var version structs.ServerVersion
 	DecodeJSON(t, resp, &version)
 	assert.Equal(t, setting.AppVer, version.Version)
+
+	// Verify https://codeberg.org/forgejo/forgejo/pulls/1098 is fixed
+	{
+		token := getUserToken(t, "user2", auth_model.AccessTokenScopeReadActivityPub)
+		req := NewRequestf(t, "GET", "/api/v1/version?token=%s", token)
+		resp := MakeRequest(t, req, http.StatusOK)
+
+		var version structs.ServerVersion
+		DecodeJSON(t, resp, &version)
+		assert.Equal(t, setting.AppVer, version.Version)
+	}
 }
