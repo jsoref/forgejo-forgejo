@@ -844,7 +844,8 @@ static-executable: $(GO_SOURCES) $(TAGS_PREREQ)
 .PHONY: release
 release: frontend generate release-linux release-copy release-compress vendor release-sources release-check
 
-sources-tarbal: vendor release-sources release-check
+# just the sources, with all assets builtin and frontend resources generated
+sources-tarbal: frontend generate vendor release-sources release-check
 
 $(DIST_DIRS):
 	mkdir -p $(DIST_DIRS)
