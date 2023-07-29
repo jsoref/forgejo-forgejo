@@ -687,11 +687,21 @@ func NotifyWatchersActions(acts []*Action) error {
 // DeleteIssueActions delete all actions related with issueID
 func DeleteIssueActions(ctx context.Context, repoID, issueID int64) error {
 	// delete actions assigned to this issue
-	subQuery := builder.Select("`id`").
-		From("`comment`").
-		Where(builder.Eq{"`issue_id`": issueID})
-	if _, err := db.GetEngine(ctx).In("comment_id", subQuery).Delete(&Action{}); err != nil {
-		return err
+
+	// MySQL doesn't use the indexes on comment_id when using a subquery.
+	// It does uses the indexes when using an JOIN, however SQLite doesn't
+	// allow JOINs in DELETE statements and XORM doesn't allow them as well.
+	// So, an specific raw SQL query for MySQL so the query makes use of indexes.
+	if setting.Database.Type.IsMySQL() {
+		if _, err := db.GetEngine(ctx).Exec("DELETE action FROM action JOIN comment ON action.comment_id = comment.id WHERE comment.issue_id = ?", issueID); err != nil {
+			return err
+		}
+	} else {
+		subQuery := builder.Select("`id`").From("`comment`").
+			Where(builder.Eq{"`issue_id`": issueID})
+		if _, err := db.GetEngine(ctx).In("comment_id", subQuery).Delete(&Action{}); err != nil {
+			return err
+		}
 	}
 
 	_, err := db.GetEngine(ctx).Table("action").Where("repo_id = ?", repoID).

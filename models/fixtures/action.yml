@@ -73,3 +73,13 @@
   is_private: false
   created_unix: 1680454039
   content: '4|' # issueId 5
+
+- id: 10
+  user_id: 15
+  op_type: 10 # issue comment
+  act_user_id: 15
+  repo_id: 32 # public
+  comment_id: 8
+  is_private: false
+  created_unix: 1680454039
+  content: '2|meh...' # issueId 5
