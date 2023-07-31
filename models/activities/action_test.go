@@ -242,6 +242,15 @@ func TestGetFeedsCorrupted(t *testing.T) {
 	assert.Equal(t, int64(0), count)
 }
 
+func TestDeleteIssueActions(t *testing.T) {
+	assert.NoError(t, unittest.PrepareTestDatabase())
+
+	comment := unittest.AssertExistsAndLoadBean(t, &issue_model.Comment{ID: 8})
+	unittest.AssertExistsAndLoadBean(t, &activities_model.Action{ID: 10, CommentID: comment.ID})
+	assert.NoError(t, activities_model.DeleteIssueActions(db.DefaultContext, 32, 17))
+	unittest.AssertNotExistsBean(t, &activities_model.Action{ID: 10, CommentID: comment.ID})
+}
+
 func TestConsistencyUpdateAction(t *testing.T) {
 	if !setting.Database.Type.IsSQLite3() {
 		t.Skip("Test is only for SQLite database.")

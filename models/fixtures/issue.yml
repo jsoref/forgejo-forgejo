@@ -283,7 +283,7 @@
   priority: 0
   is_closed: false
   is_pull: false
-  num_comments: 0
+  num_comments: 1
   created_unix: 1602935696
   updated_unix: 1602935696
   is_locked: false

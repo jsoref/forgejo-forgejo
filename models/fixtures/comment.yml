@@ -66,3 +66,12 @@
   tree_path: "README.md"
   created_unix: 946684812
   invalidated: true
+
+-
+  id: 8
+  type: 0 # comment
+  poster_id: 15
+  issue_id: 17 # in repo_id 32
+  content: "meh..."
+  created_unix: 946684812
+  updated_unix: 946684812
