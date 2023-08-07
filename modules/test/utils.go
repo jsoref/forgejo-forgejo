@@ -16,11 +16,3 @@ func RedirectURL(resp http.ResponseWriter) string {
 func IsNormalPageCompleted(s string) bool {
 	return strings.Contains(s, `<footer class="page-footer"`) && strings.Contains(s, `</html>`)
 }
-
-func MockVariable[T any](variable *T, mock T) func() {
-	original := *variable
-	*variable = mock
-	return func() {
-		*variable = original
-	}
-}
