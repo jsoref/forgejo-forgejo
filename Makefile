@@ -91,7 +91,7 @@ VERSION = ${GITEA_VERSION}
 # SemVer
 FORGEJO_VERSION := 5.0.2+0-gitea-1.20.3
 
-LDFLAGS := $(LDFLAGS) -X "main.MakeVersion=$(MAKE_VERSION)" -X "main.Version=$(GITEA_VERSION)" -X "main.Tags=$(TAGS)" -X "code.gitea.io/gitea/routers/api/forgejo/v1.ForgejoVersion=$(FORGEJO_VERSION)"
+LDFLAGS := $(LDFLAGS) -X "main.MakeVersion=$(MAKE_VERSION)" -X "main.Version=$(GITEA_VERSION)" -X "main.Tags=$(TAGS)" -X "code.gitea.io/gitea/routers/api/forgejo/v1.ForgejoVersion=$(FORGEJO_VERSION)" -X "main.ForgejoVersion=$(FORGEJO_VERSION)"
 
 LINUX_ARCHS ?= linux/amd64,linux/386,linux/arm-5,linux/arm-6,linux/arm64
 

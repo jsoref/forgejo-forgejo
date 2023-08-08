@@ -38,8 +38,11 @@ var (
 	MakeVersion = ""
 )
 
+var ForgejoVersion = "1.0.0"
+
 func init() {
 	setting.AppVer = Version
+	setting.ForgejoVersion = ForgejoVersion
 	setting.AppBuiltWith = formatBuiltWith()
 	setting.AppStartTime = time.Now().UTC()
 }
