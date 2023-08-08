@@ -28,6 +28,7 @@ import (
 	"code.gitea.io/gitea/modules/git"
 	"code.gitea.io/gitea/modules/log"
 	"code.gitea.io/gitea/modules/setting"
+	forgejo_services "code.gitea.io/gitea/services/forgejo"
 
 	"xorm.io/xorm"
 	"xorm.io/xorm/names"
@@ -554,6 +555,7 @@ func Migrate(x *xorm.Engine) error {
 		return fmt.Errorf("sync: %w", err)
 	}
 
+	var previousVersion int64
 	currentVersion := &Version{ID: 1}
 	has, err := x.Get(currentVersion)
 	if err != nil {
@@ -567,6 +569,8 @@ func Migrate(x *xorm.Engine) error {
 		if _, err = x.InsertOne(currentVersion); err != nil {
 			return fmt.Errorf("insert: %w", err)
 		}
+	} else {
+		previousVersion = currentVersion.Version
 	}
 
 	v := currentVersion.Version
@@ -593,6 +597,10 @@ Please try upgrading to a lower version first (suggested v1.6.4), then upgrade t
 		if err = git.InitSimple(context.Background()); err != nil {
 			return err
 		}
+	}
+
+	if err := forgejo_services.PreMigrationSanityChecks(x, previousVersion, setting.CfgProvider); err != nil {
+		return err
 	}
 
 	// Migrate
