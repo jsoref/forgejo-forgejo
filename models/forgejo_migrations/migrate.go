@@ -37,6 +37,8 @@ func NewMigration(desc string, fn func(*xorm.Engine) error) *Migration {
 // Add new migrations to the bottom of the list.
 var migrations = []*Migration{
 	NewMigration("Add Forgejo Blocked Users table", forgejo_v1_20.AddForgejoBlockedUser),
+	// v2 -> v3
+	NewMigration("create the forgejo_sem_ver table", forgejo_v1_20.CreateSemVerTable),
 }
 
 // GetCurrentDBVersion returns the current Forgejo database version.
