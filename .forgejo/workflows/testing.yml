@@ -154,3 +154,33 @@ jobs:
           RACE_ENABLED: true
           TEST_TAGS: gogit sqlite sqlite_unlock_notify
           USE_REPO_TEST_DIR: 1
+  upgrade:
+    needs: [test-sqlite]
+    runs-on: docker
+    container:
+      image: codeberg.org/forgejo/test_env:main
+    steps:
+      - uses: https://code.forgejo.org/actions/checkout@v3
+      - uses: https://code.forgejo.org/actions/setup-go@v4
+        with:
+          go-version: "1.20"
+      - run: |
+          git config --add safe.directory '*'
+          chown -R gitea:gitea . /go
+      - run: |
+          su gitea -c 'make deps-backend'
+      - run: |
+          su gitea -c 'make backend'
+        env:
+          TAGS: bindata sqlite sqlite_unlock_notify
+      - run: |
+          su gitea -c 'make gitea'
+          cp -a gitea /tmp/forgejo-development
+        timeout-minutes: 50
+        env:
+          TAGS: bindata sqlite sqlite_unlock_notify
+      - run: |
+          script=$(pwd)/.forgejo/upgrades/test-upgrade.sh
+          $script dependencies
+          su gitea -c "$script test_upgrades"
+
