@@ -14,6 +14,10 @@ import (
 )
 
 func AddCollaborator(ctx context.Context, repo *repo_model.Repository, u *user_model.User) error {
+	if user_model.IsBlocked(ctx, repo.OwnerID, u.ID) || user_model.IsBlocked(ctx, u.ID, repo.OwnerID) {
+		return user_model.ErrBlockedByUser
+	}
+
 	return db.WithTx(ctx, func(ctx context.Context) error {
 		collaboration := &repo_model.Collaboration{
 			RepoID: repo.ID,
