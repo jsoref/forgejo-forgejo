@@ -199,6 +199,8 @@ argument - which can alternatively be run by running the subcommand web.`
 		log.GetManager().Close()
 		os.Exit(code)
 	}
+	app.ErrWriter = os.Stderr
+
 	_ = cmd.RunMainApp(app, os.Args...) // all errors should have been handled by the RunMainApp
 	log.GetManager().Close()
 }
