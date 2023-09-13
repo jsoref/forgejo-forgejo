@@ -5,9 +5,12 @@ package user
 import (
 	"context"
 
+	model "code.gitea.io/gitea/models"
 	"code.gitea.io/gitea/models/db"
 	repo_model "code.gitea.io/gitea/models/repo"
 	user_model "code.gitea.io/gitea/models/user"
+
+	"xorm.io/builder"
 )
 
 // BlockUser adds a blocked user entry for userID to block blockID.
@@ -62,6 +65,28 @@ func BlockUser(ctx context.Context, userID, blockID int64) error {
 	}
 
 	_, err = db.GetEngine(ctx).In("id", collabsID).Delete(&repo_model.Collaboration{})
+	if err != nil {
+		return err
+	}
+
+	// Remove pending repository transfers, and set the status on those repository
+	// back to ready.
+	pendingTransfersIDs, err := model.GetPendingTransferIDs(ctx, userID, blockID)
+	if err != nil {
+		return err
+	}
+
+	// Use a subquery instead of a JOIN, because not every database supports JOIN
+	// on a UPDATE query.
+	_, err = db.GetEngine(ctx).Table("repository").
+		In("id", builder.Select("repo_id").From("repo_transfer").Where(builder.In("id", pendingTransfersIDs))).
+		Cols("status").
+		Update(&repo_model.Repository{Status: repo_model.RepositoryReady})
+	if err != nil {
+		return err
+	}
+
+	_, err = db.GetEngine(ctx).In("id", pendingTransfersIDs).Delete(&model.RepoTransfer{})
 	if err != nil {
 		return err
 	}
