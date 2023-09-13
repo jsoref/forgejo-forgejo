@@ -417,3 +417,13 @@ func TransferOwnership(ctx context.Context, doer *user_model.User, newOwnerName 
 
 	return committer.Commit()
 }
+
+// GetPendingTransfers returns the pending transfers of recipient which were sent by by doer.
+func GetPendingTransferIDs(ctx context.Context, reciepientID, doerID int64) ([]int64, error) {
+	pendingTransferIDs := make([]int64, 0, 8)
+	return pendingTransferIDs, db.GetEngine(ctx).Table("repo_transfer").
+		Where("doer_id = ?", doerID).
+		And("recipient_id = ?", reciepientID).
+		Cols("id").
+		Find(&pendingTransferIDs)
+}

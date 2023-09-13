@@ -162,7 +162,9 @@ func TestBlockActions(t *testing.T) {
 
 	doer := unittest.AssertExistsAndLoadBean(t, &user_model.User{ID: 2})
 	blockedUser := unittest.AssertExistsAndLoadBean(t, &user_model.User{ID: 1})
+	blockedUser2 := unittest.AssertExistsAndLoadBean(t, &user_model.User{ID: 10})
 	repo2 := unittest.AssertExistsAndLoadBean(t, &repo_model.Repository{ID: 2, OwnerID: doer.ID})
+	repo7 := unittest.AssertExistsAndLoadBean(t, &repo_model.Repository{ID: 7, OwnerID: blockedUser2.ID})
 	issue4 := unittest.AssertExistsAndLoadBean(t, &issue_model.Issue{ID: 4, RepoID: repo2.ID})
 	issue4URL := fmt.Sprintf("/%s/issues/%d", repo2.FullName(), issue4.Index)
 	// NOTE: Sessions shouldn't be shared, because in some situations flash
@@ -170,6 +172,7 @@ func TestBlockActions(t *testing.T) {
 	// results.
 
 	BlockUser(t, doer, blockedUser)
+	BlockUser(t, doer, blockedUser2)
 
 	// Ensures that issue creation on doer's ownen repositories are blocked.
 	t.Run("Issue creation", func(t *testing.T) {
@@ -326,10 +329,6 @@ func TestBlockActions(t *testing.T) {
 
 	// Ensures that the doer and blocked user cannot add each each other as collaborators.
 	t.Run("Add collaborator", func(t *testing.T) {
-		blockedUser := unittest.AssertExistsAndLoadBean(t, &user_model.User{ID: 10})
-
-		BlockUser(t, doer, blockedUser)
-
 		t.Run("Doer Add BlockedUser", func(t *testing.T) {
 			defer tests.PrintCurrentTest(t)()
 
@@ -338,7 +337,7 @@ func TestBlockActions(t *testing.T) {
 
 			req := NewRequestWithValues(t, "POST", link, map[string]string{
 				"_csrf":        GetCSRF(t, session, link),
-				"collaborator": blockedUser.Name,
+				"collaborator": blockedUser2.Name,
 			})
 			session.MakeRequest(t, req, http.StatusSeeOther)
 
@@ -350,10 +349,8 @@ func TestBlockActions(t *testing.T) {
 		t.Run("BlockedUser Add doer", func(t *testing.T) {
 			defer tests.PrintCurrentTest(t)()
 
-			repo := unittest.AssertExistsAndLoadBean(t, &repo_model.Repository{ID: 7, OwnerID: blockedUser.ID})
-
-			session := loginUser(t, blockedUser.Name)
-			link := fmt.Sprintf("/%s/settings/collaboration", repo.FullName())
+			session := loginUser(t, blockedUser2.Name)
+			link := fmt.Sprintf("/%s/settings/collaboration", repo7.FullName())
 
 			req := NewRequestWithValues(t, "POST", link, map[string]string{
 				"_csrf":        GetCSRF(t, session, link),
@@ -365,5 +362,27 @@ func TestBlockActions(t *testing.T) {
 			assert.NotNil(t, flashCookie)
 			assert.EqualValues(t, "error%3DCannot%2Badd%2Bthe%2Bcollaborator%252C%2Bbecause%2Bthey%2Bhave%2Bblocked%2Bthe%2Brepository%2Bowner.", flashCookie.Value)
 		})
+	})
+
+	// Ensures that the blocked user cannot transfer a repository to the doer.
+	t.Run("Repository transfer", func(t *testing.T) {
+		defer tests.PrintCurrentTest(t)()
+
+		session := loginUser(t, blockedUser2.Name)
+		link := fmt.Sprintf("%s/settings", repo7.FullName())
+
+		req := NewRequestWithValues(t, "POST", link, map[string]string{
+			"_csrf":          GetCSRF(t, session, link),
+			"action":         "transfer",
+			"repo_name":      repo7.Name,
+			"new_owner_name": doer.Name,
+		})
+		resp := session.MakeRequest(t, req, http.StatusOK)
+
+		htmlDoc := NewHTMLParser(t, resp.Body)
+		assert.Contains(t,
+			htmlDoc.doc.Find(".ui.negative.message").Text(),
+			translation.NewLocale("en-US").Tr("repo.settings.new_owner_blocked_doer"),
+		)
 	})
 }

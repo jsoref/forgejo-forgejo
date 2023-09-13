@@ -6,6 +6,7 @@ package user
 import (
 	"testing"
 
+	model "code.gitea.io/gitea/models"
 	"code.gitea.io/gitea/models/db"
 	repo_model "code.gitea.io/gitea/models/repo"
 	"code.gitea.io/gitea/models/unittest"
@@ -69,5 +70,22 @@ func TestBlockUser(t *testing.T) {
 
 		assert.False(t, isBlockedUserCollab(repo1))
 		assert.False(t, isBlockedUserCollab(repo2))
+	})
+
+	t.Run("Pending transfers", func(t *testing.T) {
+		doer := unittest.AssertExistsAndLoadBean(t, &user_model.User{ID: 1})
+		blockedUser := unittest.AssertExistsAndLoadBean(t, &user_model.User{ID: 3})
+		defer user_model.UnblockUser(db.DefaultContext, doer.ID, blockedUser.ID)
+
+		unittest.AssertExistsIf(t, true, &repo_model.Repository{ID: 3, OwnerID: blockedUser.ID, Status: repo_model.RepositoryPendingTransfer})
+		unittest.AssertExistsIf(t, true, &model.RepoTransfer{ID: 1, RecipientID: doer.ID, DoerID: blockedUser.ID})
+
+		assert.NoError(t, BlockUser(db.DefaultContext, doer.ID, blockedUser.ID))
+
+		unittest.AssertExistsIf(t, false, &model.RepoTransfer{ID: 1, RecipientID: doer.ID, DoerID: blockedUser.ID})
+
+		// Don't use AssertExistsIf, as it doesn't include the zero values in the condition such as `repo_model.RepositoryReady`.
+		repo := unittest.AssertExistsAndLoadBean(t, &repo_model.Repository{ID: 3, OwnerID: blockedUser.ID})
+		assert.Equal(t, repo_model.RepositoryReady, repo.Status)
 	})
 }
