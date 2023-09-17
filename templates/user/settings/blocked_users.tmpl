@@ -4,7 +4,7 @@
 		{{.locale.Tr "settings.blocked_users"}}
 	</h4>
 	<div class="ui attached segment">
-		{{template "shared/blocked_users_list" dict "locale" .locale "BlockedUsers" .BlockedUsers}}
+		{{template "shared/blocked_users_list" .}}
 	</div>
 </div>
 {{template "user/settings/layout_footer" .}}
