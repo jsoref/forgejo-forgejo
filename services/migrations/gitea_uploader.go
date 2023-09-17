@@ -859,6 +859,11 @@ func (g *GiteaLocalUploader) CreateReviews(reviews ...*base.Review) error {
 		}
 
 		for _, comment := range review.Comments {
+			// Skip code comment if it doesn't have a diff it is commeting on.
+			if comment.DiffHunk == "" {
+				continue
+			}
+
 			line := comment.Line
 			if line != 0 {
 				comment.Position = 1
