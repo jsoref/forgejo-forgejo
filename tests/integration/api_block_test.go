@@ -84,7 +84,7 @@ func TestAPIOrgBlock(t *testing.T) {
 	defer tests.PrepareTestEnv(t)()
 
 	user := "user5"
-	org := "user6"
+	org := "org6"
 	session := loginUser(t, user)
 	token := getTokenForLoggedInUser(t, session, auth_model.AccessTokenScopeWriteOrganization)
 
@@ -163,7 +163,7 @@ func TestAPIOrgBlock(t *testing.T) {
 	t.Run("Not as owner", func(t *testing.T) {
 		defer tests.PrintCurrentTest(t)()
 
-		org := "user3"
+		org := "org3"
 		user := "user4" // Part of org team with write perms.
 
 		session := loginUser(t, user)

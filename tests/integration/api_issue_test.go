@@ -411,7 +411,7 @@ func TestAPISearchIssues(t *testing.T) {
 	resp = MakeRequest(t, req, http.StatusOK)
 	DecodeJSON(t, resp, &apiIssues)
 	assert.EqualValues(t, "21", resp.Header().Get("X-Total-Count"))
-	assert.Len(t, apiIssues, 21)
+	assert.Len(t, apiIssues, 20)
 
 	query.Add("limit", "10")
 	link.RawQuery = query.Encode()
