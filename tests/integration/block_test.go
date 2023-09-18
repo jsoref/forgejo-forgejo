@@ -374,7 +374,7 @@ func TestBlockActions(t *testing.T) {
 		req := NewRequestWithValues(t, "POST", link, map[string]string{
 			"_csrf":          GetCSRF(t, session, link),
 			"action":         "transfer",
-			"repo_name":      repo7.Name,
+			"repo_name":      repo7.FullName(),
 			"new_owner_name": doer.Name,
 		})
 		resp := session.MakeRequest(t, req, http.StatusOK)
