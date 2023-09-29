@@ -4,6 +4,7 @@
 package context
 
 import (
+	"crypto/sha256"
 	"encoding/hex"
 	"net/http"
 	"strings"
@@ -12,7 +13,6 @@ import (
 	"code.gitea.io/gitea/modules/util"
 	"code.gitea.io/gitea/modules/web/middleware"
 
-	"github.com/minio/sha256-simd"
 	"golang.org/x/crypto/pbkdf2"
 )
 
