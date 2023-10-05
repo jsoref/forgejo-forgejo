@@ -42,12 +42,12 @@ function log_info() {
 function dependencies() {
     maybe_sudo
     if ! which curl daemon jq git-lfs > /dev/null ; then
-        $SUDO apt-get install -y -qq curl daemon git-lfs jq
+        $SUDO apt-get install -y -qq curl daemon git-lfs jq sqlite3
     fi
 
     if ! test -f /usr/local/bin/mc || ! test -f /usr/local/bin/minio  > /dev/null ; then
         $SUDO curl --fail -sS https://dl.min.io/client/mc/release/linux-amd64/mc -o /usr/local/bin/mc
-        $SUDO curl --fail -sS https://dl.min.io/server/minio/release/linux-amd64/archive/minio.RELEASE.2023-08-23T10-07-06Z -o /usr/local/bin/minio
+        $SUDO curl --fail -sS https://dl.min.io/server/minio/release/linux-amd64/minio -o /usr/local/bin/minio
     fi
     if ! test -x /usr/local/bin/mc || ! test -x /usr/local/bin/minio  > /dev/null ; then
         $SUDO chmod +x /usr/local/bin/mc
@@ -101,7 +101,11 @@ function download() {
 
     if ! test -f $DIR/forgejo-$version ; then
         mkdir -p $DIR
-        wget -O $DIR/forgejo-$version --quiet https://codeberg.org/forgejo/forgejo/releases/download/v$version/forgejo-$version-linux-amd64
+	for owner in forgejo forgejo-experimental forgejo-integration ; do
+            if wget -O $DIR/forgejo-$version --quiet https://codeberg.org/$owner/forgejo/releases/download/v$version/forgejo-$version-linux-amd64 ; then
+		break
+	    fi
+	done
         chmod +x $DIR/forgejo-$version
     fi
 }
@@ -555,6 +559,40 @@ function test_successful_upgrades() {
     done
 }
 
+function test_forgejo_database_version() {
+    local expected_version=$1
+    local work_path=$DIR/forgejo-work-path
+
+    actual_version=$(sqlite3 $work_path/forgejo.db "select version from forgejo_version")
+    test "$expected_version" = "$actual_version"
+}
+
+function test_forgejo_database_v3_upgrades_list_table() {
+    local table=$1
+    local work_path=$DIR/forgejo-work-path
+
+    sqlite3 $work_path/forgejo.db  ".tables $table"  .exit | grep --quiet $table
+}
+
+function test_forgejo_database_v3_upgrades() {
+    local table=forgejo_auth_token
+
+    stop
+
+    reset default
+    log_info "run 1.20.4-1"
+    start 1.20.4-1
+    stop
+    ! test_forgejo_database_v3_upgrades_list_table $table
+    test_forgejo_database_version 2
+
+    log_info "run 1.20.5-0"
+    start 1.20.5-0
+    stop
+    test_forgejo_database_v3_upgrades_list_table $table
+    test_forgejo_database_version 3
+}
+
 function run() {
     local fun=$1
     shift
@@ -585,6 +623,7 @@ function test_upgrades() {
     run test_bug_storage_s3_misplace
     run test_storage_stable_s3 minio
     run test_storage_stable_s3 garage
+    run test_forgejo_database_v3_upgrades
 }
 
 "$@"
