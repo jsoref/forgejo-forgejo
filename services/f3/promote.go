@@ -92,7 +92,7 @@ func getF3UserToPromote(ctx context.Context, source *auth_model.Source, loginNam
 		return nil, nil
 	}
 
-	userSource, err := auth_model.GetSourceByID(u.LoginSource)
+	userSource, err := auth_model.GetSourceByID(ctx, u.LoginSource)
 	if err != nil {
 		if auth_model.IsErrSourceNotExist(err) {
 			log.Error("getF3UserToPromote: source id = %v for user %v not found %v", u.LoginSource, u.ID, err)

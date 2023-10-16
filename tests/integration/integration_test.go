@@ -277,7 +277,7 @@ func authSourcePayloadGitLabCustom(name string) map[string]string {
 }
 
 func createF3AuthSource(t *testing.T, name, url, matchingSource string) *auth.Source {
-	assert.NoError(t, auth.CreateSource(&auth.Source{
+	assert.NoError(t, auth.CreateSource(context.Background(), &auth.Source{
 		Type:     auth.F3,
 		Name:     name,
 		IsActive: true,
