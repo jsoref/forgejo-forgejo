@@ -1292,7 +1292,7 @@ func oAuth2GothUserToUser(ctx go_context.Context, authSource *auth.Source, gothU
 		ExternalID:    gothUser.UserID,
 		LoginSourceID: authSource.ID,
 	}
-	hasUser, err = user_model.GetExternalLogin(request.Context(), externalLoginUser)
+	hasUser, err = user_model.GetExternalLogin(ctx, externalLoginUser)
 	if err != nil {
 		return nil, err
 	}

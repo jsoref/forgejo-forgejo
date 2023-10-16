@@ -100,7 +100,7 @@ func (o *ProjectProvider) FromFormat(ctx context.Context, p *format.Project) *Pr
 }
 
 func (o *ProjectProvider) GetObjects(ctx context.Context, user *User, page int) []*Project {
-	repoList, _, err := repo_model.GetUserRepositories(&repo_model.SearchRepoOptions{
+	repoList, _, err := repo_model.GetUserRepositories(ctx, &repo_model.SearchRepoOptions{
 		ListOptions: db.ListOptions{Page: page, PageSize: o.g.perPage},
 		Actor:       &user.User,
 		Private:     true,
@@ -123,7 +123,7 @@ func (o *ProjectProvider) Get(ctx context.Context, user *User, exemplar *Project
 	if exemplar.GetID() > 0 {
 		project, err = repo_model.GetRepositoryByID(ctx, exemplar.GetID())
 	} else if exemplar.Name != "" {
-		project, err = repo_model.GetRepositoryByName(user.GetID(), exemplar.Name)
+		project, err = repo_model.GetRepositoryByName(ctx, user.GetID(), exemplar.Name)
 	} else {
 		panic("GetID() == 0 and ProjectName == \"\"")
 	}

@@ -118,7 +118,7 @@ require (
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/yaml.v3 v3.0.1
-	lab.forgefriends.org/friendlyforgeformat/gof3 v1.0.1-0.20230917111322-4e5634530d7b
+	lab.forgefriends.org/friendlyforgeformat/gof3 v1.0.1-0.20231016193607-59f139e6759e
 	mvdan.cc/xurls/v2 v2.5.0
 	strk.kbt.io/projects/go/libravatar v0.0.0-20191008002943-06d1c002b251
 	xorm.io/builder v0.3.13

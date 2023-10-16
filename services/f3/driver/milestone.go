@@ -133,7 +133,7 @@ func (o *MilestoneProvider) FromFormat(ctx context.Context, m *format.Milestone)
 }
 
 func (o *MilestoneProvider) GetObjects(ctx context.Context, user *User, project *Project, page int) []*Milestone {
-	milestones, _, err := issues_model.GetMilestones(issues_model.GetMilestonesOption{
+	milestones, _, err := issues_model.GetMilestones(ctx, issues_model.GetMilestonesOption{
 		ListOptions: db.ListOptions{Page: page, PageSize: o.g.perPage},
 		RepoID:      project.GetID(),
 		State:       api.StateAll,
