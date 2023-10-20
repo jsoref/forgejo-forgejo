@@ -10,6 +10,8 @@ on:
 jobs:
   lint-backend:
     runs-on: docker
+    container:
+      image: 'docker.io/node:20-bookworm'
     steps:
       - uses: https://code.forgejo.org/actions/checkout@v3
       - uses: https://code.forgejo.org/actions/setup-go@v4
@@ -22,6 +24,8 @@ jobs:
           TAGS: bindata sqlite sqlite_unlock_notify
   checks-backend:
     runs-on: docker
+    container:
+      image: 'docker.io/node:20-bookworm'
     steps:
       - uses: https://code.forgejo.org/actions/checkout@v3
       - uses: https://code.forgejo.org/actions/setup-go@v4
@@ -34,7 +38,7 @@ jobs:
     runs-on: docker
     needs: [lint-backend, checks-backend]
     container:
-      image: codeberg.org/forgejo/test_env:1.20
+      image: 'docker.io/node:20-bookworm'
     steps:
       - uses: https://code.forgejo.org/actions/checkout@v3
       - uses: https://code.forgejo.org/actions/setup-go@v4
@@ -42,15 +46,16 @@ jobs:
           go-version: "1.20"
       - run: |
           git config --add safe.directory '*'
-          chown -R gitea:gitea . /go
+          adduser --quiet --comment forgejo --disabled-password forgejo
+          chown -R forgejo:forgejo .
       - run: |
-          su gitea -c 'make deps-backend'
+          su forgejo -c 'make deps-backend'
       - run: |
-          su gitea -c 'make backend'
+          su forgejo -c 'make backend'
         env:
           TAGS: bindata
       - run: |
-          su gitea -c 'make unit-test-coverage test-check'
+          su forgejo -c 'make unit-test-coverage test-check'
         timeout-minutes: 50
         env:
           RACE_ENABLED: 'true'
@@ -59,7 +64,7 @@ jobs:
     runs-on: docker
     needs: [lint-backend, checks-backend]
     container:
-      image: codeberg.org/forgejo/test_env:1.20
+      image: 'docker.io/node:20-bookworm'
     services:
       mysql8:
         image: mysql:8-debian
@@ -77,17 +82,24 @@ jobs:
       - uses: https://code.forgejo.org/actions/setup-go@v4
         with:
           go-version: "1.20"
-      - run: |
+      - name: install dependencies
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -qq
+          apt-get install --no-install-recommends -qq -y git-lfs
+      - name: setup user and permissions
+        run: |
           git config --add safe.directory '*'
-          chown -R gitea:gitea . /go
+          adduser --quiet --comment forgejo --disabled-password forgejo
+          chown -R forgejo:forgejo .
       - run: |
-          su gitea -c 'make deps-backend'
+          su forgejo -c 'make deps-backend'
       - run: |
-          su gitea -c 'make backend'
+          su forgejo -c 'make backend'
         env:
           TAGS: bindata
       - run: |
-          su gitea -c 'make test-mysql8-migration test-mysql8'
+          su forgejo -c 'make test-mysql8-migration test-mysql8'
         timeout-minutes: 50
         env:
           TAGS: bindata
@@ -96,10 +108,10 @@ jobs:
     runs-on: docker
     needs: [lint-backend, checks-backend]
     container:
-      image: codeberg.org/forgejo/test_env:1.20
+      image: 'docker.io/node:20-bookworm'
     services:
       pgsql:
-        image: postgres:15
+        image: 'docker.io/postgres:15'
         env:
           POSTGRES_DB: test
           POSTGRES_PASSWORD: postgres
@@ -110,17 +122,24 @@ jobs:
       - uses: https://code.forgejo.org/actions/setup-go@v4
         with:
           go-version: "1.20"
-      - run: |
+      - name: install dependencies
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -qq
+          apt-get install --no-install-recommends -qq -y git-lfs
+      - name: setup user and permissions
+        run: |
           git config --add safe.directory '*'
-          chown -R gitea:gitea . /go
+          adduser --quiet --comment forgejo --disabled-password forgejo
+          chown -R forgejo:forgejo .
       - run: |
-          su gitea -c 'make deps-backend'
+          su forgejo -c 'make deps-backend'
       - run: |
-          su gitea -c 'make backend'
+          su forgejo -c 'make backend'
         env:
           TAGS: bindata
       - run: |
-          su gitea -c 'make test-pgsql-migration test-pgsql'
+          su forgejo -c 'make test-pgsql-migration test-pgsql'
         timeout-minutes: 50
         env:
           TAGS: bindata gogit
@@ -131,23 +150,30 @@ jobs:
     runs-on: docker
     needs: [lint-backend, checks-backend]
     container:
-      image: codeberg.org/forgejo/test_env:1.20
+      image: 'docker.io/node:20-bookworm'
     steps:
       - uses: https://code.forgejo.org/actions/checkout@v3
       - uses: https://code.forgejo.org/actions/setup-go@v4
         with:
           go-version: "1.20"
-      - run: |
+      - name: install dependencies
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -qq
+          apt-get install --no-install-recommends -qq -y git-lfs
+      - name: setup user and permissions
+        run: |
           git config --add safe.directory '*'
-          chown -R gitea:gitea . /go
+          adduser --quiet --comment forgejo --disabled-password forgejo
+          chown -R forgejo:forgejo .
       - run: |
-          su gitea -c 'make deps-backend'
+          su forgejo -c 'make deps-backend'
       - run: |
-          su gitea -c 'make backend'
+          su forgejo -c 'make backend'
         env:
           TAGS: bindata gogit sqlite sqlite_unlock_notify
       - run: |
-          su gitea -c 'make test-sqlite-migration test-sqlite'
+          su forgejo -c 'make test-sqlite-migration test-sqlite'
         timeout-minutes: 50
         env:
           TAGS: bindata gogit sqlite sqlite_unlock_notify
