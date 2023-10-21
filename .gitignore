@@ -96,6 +96,7 @@ cpu.out
 /VERSION
 /.air
 /.go-licenses
+/.cur-deadcode-out
 
 # Snapcraft
 /gitea_a*.txt
