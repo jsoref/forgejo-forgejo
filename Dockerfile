@@ -38,6 +38,19 @@ RUN make frontend
 RUN go build contrib/environment-to-ini/environment-to-ini.go && xx-verify environment-to-ini
 RUN make go-check generate-backend static-executable && xx-verify gitea
 
+# Copy local files
+COPY docker/root /tmp/local
+
+# Set permissions
+RUN chmod 755 /tmp/local/usr/bin/entrypoint \
+              /tmp/local/usr/local/bin/gitea \
+              /tmp/local/etc/s6/gitea/* \
+              /tmp/local/etc/s6/openssh/* \
+              /tmp/local/etc/s6/.s6-svscan/* \
+              /go/src/code.gitea.io/gitea/gitea \
+              /go/src/code.gitea.io/gitea/environment-to-ini
+RUN chmod 644 /go/src/code.gitea.io/gitea/contrib/autocompletion/bash_autocomplete
+
 FROM docker.io/library/alpine:3.18
 LABEL maintainer="contact@forgejo.org"
 
@@ -54,7 +67,8 @@ RUN apk --no-cache add \
     s6 \
     sqlite \
     su-exec \
-    gnupg
+    gnupg \
+    && rm -rf /var/cache/apk/*
 
 RUN addgroup \
     -S -g 1000 \
@@ -76,10 +90,7 @@ VOLUME ["/data"]
 ENTRYPOINT ["/usr/bin/entrypoint"]
 CMD ["/bin/s6-svscan", "/etc/s6"]
 
-COPY docker/root /
+COPY --from=build-env /tmp/local /
 COPY --from=build-env /go/src/code.gitea.io/gitea/gitea /app/gitea/gitea
 COPY --from=build-env /go/src/code.gitea.io/gitea/environment-to-ini /usr/local/bin/environment-to-ini
 COPY --from=build-env /go/src/code.gitea.io/gitea/contrib/autocompletion/bash_autocomplete /etc/profile.d/gitea_bash_autocomplete.sh
-RUN chmod 755 /usr/bin/entrypoint /app/gitea/gitea /usr/local/bin/gitea /usr/local/bin/environment-to-ini
-RUN chmod 755 /etc/s6/gitea/* /etc/s6/openssh/* /etc/s6/.s6-svscan/*
-RUN chmod 644 /etc/profile.d/gitea_bash_autocomplete.sh
