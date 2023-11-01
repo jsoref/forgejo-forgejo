@@ -9,20 +9,20 @@
 					{{template "shared/user/name" .}}
 				</div>
 				<div class="flex-item-body">
-					<span>{{$.locale.Tr "settings.blocked_since" (DateTime "short" .CreatedUnix) | Safe}}</span>
+					<span>{{ctx.Locale.Tr "settings.blocked_since" (DateTime "short" .CreatedUnix) | Safe}}</span>
 				</div>
 			</div>
 			<div class="flex-item-trailing">
 				<form action="{{$.Link}}/unblock" method="post">
 					{{$.CsrfTokenHtml}}
 					<input type="hidden" name="user_id" value="{{.ID}}">
-					<button class="ui red button">{{$.locale.Tr "user.unblock"}}</button>
+					<button class="ui red button">{{ctx.Locale.Tr "user.unblock"}}</button>
 				</form>
 			</div>
 		</div>
 	{{else}}
 		<div class="flex-item">
-			<span class="text grey italic">{{$.locale.Tr "settings.blocked_users_none"}}</span>
+			<span class="text grey italic">{{ctx.Locale.Tr "settings.blocked_users_none"}}</span>
 		</div>
 	{{end}}
 </div>
