@@ -13,9 +13,9 @@
 
 <body>
 	<ul>
-		<h3>{{.locale.Tr "mail.admin.new_user.user_info"}}</h3>
-		<li>{{.locale.Tr "admin.users.created"}}: {{DateTime "full" .NewUser.LastLoginUnix}}</li>
-		<li>{{.locale.Tr "admin.users.last_login"}}: {{DateTime "full" .NewUser.CreatedUnix}}</li>
+		<h3>{{ctx.Locale.Tr "mail.admin.new_user.user_info"}}</h3>
+		<li>{{ctx.Locale.Tr "admin.users.created"}}: {{DateTime "full" .NewUser.LastLoginUnix}}</li>
+		<li>{{ctx.Locale.Tr "admin.users.last_login"}}: {{DateTime "full" .NewUser.CreatedUnix}}</li>
 	</ul>
 	<p> {{.Body | Str2html}} </p>
 </body>
