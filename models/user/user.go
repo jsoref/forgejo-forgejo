@@ -564,6 +564,7 @@ var (
 		"user",
 		"v2",
 		"gitea-actions",
+		"forgejo-actions",
 	}
 
 	// DON'T ADD ANY NEW STUFF, WE SOLVE THIS WITH `/user/{obj}` PATHS!

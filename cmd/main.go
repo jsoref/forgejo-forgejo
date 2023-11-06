@@ -78,7 +78,7 @@ func appGlobalFlags() []cli.Flag {
 		&cli.StringFlag{
 			Name:    "work-path",
 			Aliases: []string{"w"},
-			Usage:   "Set Gitea's working path (defaults to the Gitea's binary directory)",
+			Usage:   "Set Forgejo's working path (defaults to the directory of the Forgejo binary)",
 		},
 	}
 }
@@ -153,9 +153,9 @@ func NewMainApp(version, versionExtra string) *cli.App {
 
 func innerNewMainApp(version, versionExtra string, subCmdsStandaloneArgs, subCmdWithConfigArgs []*cli.Command) *cli.App {
 	app := cli.NewApp()
-	app.Name = "Gitea"
-	app.Usage = "A painless self-hosted Git service"
-	app.Description = `By default, Gitea will start serving using the web-server with no argument, which can alternatively be run by running the subcommand "web".`
+	app.Name = "Forgejo"
+	app.Usage = "Beyond coding. We forge."
+	app.Description = `By default, forgejo will start serving using the web-server with no argument, which can alternatively be run by running the subcommand "web".`
 	app.Version = version + versionExtra
 	app.EnableBashCompletion = true
 
