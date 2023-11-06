@@ -6,7 +6,7 @@
 			<div class="menu">
 				<a class="item" href="{{.BaseLinkNew}}/forgejo/new">
 					{{template "shared/webhook/icon" (dict "HookType" "forgejo" "Size" 20)}}
-					{{.locale.Tr "repo.settings.web_hook_name_forgejo"}}
+					{{ctx.Locale.Tr "repo.settings.web_hook_name_forgejo"}}
 				</a>
 				<a class="item" href="{{.BaseLinkNew}}/gitea/new">
 					{{template "shared/webhook/icon" (dict "HookType" "gitea" "Size" 20)}}
