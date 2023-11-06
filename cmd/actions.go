@@ -17,7 +17,7 @@ var (
 	CmdActions = &cli.Command{
 		Name:        "actions",
 		Usage:       "",
-		Description: "Commands for managing Gitea Actions",
+		Description: "Commands for managing Forgejo Actions",
 		Subcommands: []*cli.Command{
 			subcmdActionsGenRunnerToken,
 		},
