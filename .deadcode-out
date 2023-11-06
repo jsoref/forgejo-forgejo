@@ -113,6 +113,7 @@ package "code.gitea.io/gitea/models/repo"
 	func (ErrTopicNotExist).Unwrap
 	func GetTopicByName
 	func WatchRepoMode
+	func GetWatchers
 
 package "code.gitea.io/gitea/models/system"
 	func DeleteNotice

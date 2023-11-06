@@ -55,3 +55,16 @@ func TestRepositoryTransfer(t *testing.T) {
 	// Cancel transfer
 	assert.NoError(t, CancelRepositoryTransfer(db.DefaultContext, repo))
 }
+
+func TestGetPendingTransferIDs(t *testing.T) {
+	assert.NoError(t, unittest.PrepareTestDatabase())
+	doer := unittest.AssertExistsAndLoadBean(t, &user_model.User{ID: 3})
+	reciepient := unittest.AssertExistsAndLoadBean(t, &user_model.User{ID: 1})
+	pendingTransfer := unittest.AssertExistsAndLoadBean(t, &RepoTransfer{RecipientID: reciepient.ID, DoerID: doer.ID})
+
+	pendingTransferIDs, err := GetPendingTransferIDs(db.DefaultContext, reciepient.ID, doer.ID)
+	assert.NoError(t, err)
+	if assert.Len(t, pendingTransferIDs, 1) {
+		assert.EqualValues(t, pendingTransfer.ID, pendingTransferIDs[0])
+	}
+}
