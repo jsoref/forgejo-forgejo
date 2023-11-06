@@ -165,7 +165,7 @@ func renderDirectory(ctx *context.Context, treeLink string) {
 
 	if ctx.Repo.TreePath != "" {
 		ctx.Data["HideRepoInfo"] = true
-		ctx.Data["Title"] = ctx.Tr("repo.file.title", ctx.Repo.Repository.Name+"/"+path.Base(ctx.Repo.TreePath), ctx.Repo.RefName)
+		ctx.Data["Title"] = ctx.Tr("repo.file.title", ctx.Repo.Repository.Name+"/"+ctx.Repo.TreePath, ctx.Repo.RefName)
 	}
 
 	subfolder, readmeFile, err := findReadmeFileInEntries(ctx, entries, true)
@@ -344,7 +344,7 @@ func renderFile(ctx *context.Context, entry *git.TreeEntry, treeLink, rawLink st
 	}
 	defer dataRc.Close()
 
-	ctx.Data["Title"] = ctx.Tr("repo.file.title", ctx.Repo.Repository.Name+"/"+path.Base(ctx.Repo.TreePath), ctx.Repo.RefName)
+	ctx.Data["Title"] = ctx.Tr("repo.file.title", ctx.Repo.Repository.Name+"/"+ctx.Repo.TreePath, ctx.Repo.RefName)
 	ctx.Data["FileIsSymlink"] = entry.IsLink()
 	ctx.Data["FileName"] = blob.Name()
 	ctx.Data["RawFileLink"] = rawLink + "/" + util.PathEscapeSegments(ctx.Repo.TreePath)
@@ -734,12 +734,19 @@ func Home(ctx *context.Context) {
 	if setting.Other.EnableFeed {
 		isFeed, _, showFeedType := feed.GetFeedType(ctx.Params(":reponame"), ctx.Req)
 		if isFeed {
-			switch {
-			case ctx.Link == fmt.Sprintf("%s.%s", ctx.Repo.RepoLink, showFeedType):
+			if ctx.Link == fmt.Sprintf("%s.%s", ctx.Repo.RepoLink, showFeedType) {
 				feed.ShowRepoFeed(ctx, ctx.Repo.Repository, showFeedType)
-			case ctx.Repo.TreePath == "":
+				return
+			}
+
+			if ctx.Repo.Repository.IsEmpty {
+				ctx.NotFound("MustBeNotEmpty", nil)
+				return
+			}
+
+			if ctx.Repo.TreePath == "" {
 				feed.ShowBranchFeed(ctx, ctx.Repo.Repository, showFeedType)
-			case ctx.Repo.TreePath != "":
+			} else {
 				feed.ShowFileFeed(ctx, ctx.Repo.Repository, showFeedType)
 			}
 			return

@@ -49,15 +49,10 @@ import (
 	_ "code.gitea.io/gitea/modules/session" // to registers all internal adapters
 
 	"gitea.com/go-chi/captcha"
-	"github.com/NYTimes/gziphandler"
 	chi_middleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/klauspost/compress/gzhttp"
 	"github.com/prometheus/client_golang/prometheus"
-)
-
-const (
-	// GzipMinSize represents min size to compress for the body size of response
-	GzipMinSize = 1400
 )
 
 // CorsHandler return a http handler who set CORS options if enabled by config
@@ -230,11 +225,11 @@ func Routes() *web.Route {
 	var mid []any
 
 	if setting.EnableGzip {
-		h, err := gziphandler.GzipHandlerWithOpts(gziphandler.MinSize(GzipMinSize))
+		wrapper, err := gzhttp.NewWrapper(gzhttp.RandomJitter(32, 0, false))
 		if err != nil {
-			log.Fatal("GzipHandlerWithOpts failed: %v", err)
+			log.Fatal("gzhttp.NewWrapper failed: %v", err)
 		}
-		mid = append(mid, h)
+		mid = append(mid, wrapper)
 	}
 
 	if setting.Service.EnableCaptcha {
@@ -1478,8 +1473,8 @@ func registerRoutes(m *web.Route) {
 			m.Get("/cherry-pick/{sha:([a-f0-9]{7,40})$}", repo.SetEditorconfigIfExists, repo.CherryPick)
 		}, repo.MustBeNotEmpty, context.RepoRef(), reqRepoCodeReader)
 
-		m.Get("/rss/branch/*", context.RepoRefByType(context.RepoRefBranch), feedEnabled, feed.RenderBranchFeed)
-		m.Get("/atom/branch/*", context.RepoRefByType(context.RepoRefBranch), feedEnabled, feed.RenderBranchFeed)
+		m.Get("/rss/branch/*", repo.MustBeNotEmpty, context.RepoRefByType(context.RepoRefBranch), feedEnabled, feed.RenderBranchFeed("rss"))
+		m.Get("/atom/branch/*", repo.MustBeNotEmpty, context.RepoRefByType(context.RepoRefBranch), feedEnabled, feed.RenderBranchFeed("atom"))
 
 		m.Group("/src", func() {
 			m.Get("/branch/*", context.RepoRefByType(context.RepoRefBranch), repo.Home)
