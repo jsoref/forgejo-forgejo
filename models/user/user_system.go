@@ -9,10 +9,12 @@ import (
 	"code.gitea.io/gitea/modules/structs"
 )
 
+const GhostUserID = -1
+
 // NewGhostUser creates and returns a fake user for someone has deleted their account.
 func NewGhostUser() *User {
 	return &User{
-		ID:        -1,
+		ID:        GhostUserID,
 		Name:      "Ghost",
 		LowerName: "ghost",
 	}
