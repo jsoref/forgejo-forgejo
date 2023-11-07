@@ -4,7 +4,8 @@ set -ex
 
 end_to_end=$1
 end_to_end_pr=$2
-forgejo_pr=$3
+forgejo=$3
+forgejo_pr=$4
 
 url=$(jq --raw-output .head.repo.html_url < $forgejo_pr)
 test "$url" != null
