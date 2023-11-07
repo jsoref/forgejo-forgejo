@@ -6,6 +6,21 @@ on:
        - labeled
 
 jobs:
+  info:
+    runs-on: docker
+    container:
+      image: node:20-bookworm
+    steps:
+      - name: event
+        run: |
+          echo github.event.pull_request.head.repo.fork = ${{ github.event.pull_request.head.repo.fork }}
+          echo github.event.action = ${{ github.event.action }}
+          echo github.event.pull_request.merged = ${{ github.event.pull_request.merged }}
+          echo github.event.pull_request.labels.*.name
+          cat <<'EOF'
+          ${{ toJSON(github.event.pull_request.labels.*.name) }}
+          EOF
+
   cascade:
     runs-on: docker
     container:
@@ -29,7 +44,7 @@ jobs:
           origin-token: ${{ secrets.END_TO_END_CASCADING_PR_ORIGIN }}
           origin-pr: ${{ github.event.pull_request.number }}
           destination-url: https://code.forgejo.org
-          destination-repo: cascading-pr/end-to-end
+          destination-fork-repo: cascading-pr/end-to-end
           destination-repo: forgejo/end-to-end
           destination-branch: main
           destination-token: ${{ secrets.END_TO_END_CASCADING_PR_DESTINATION }}
