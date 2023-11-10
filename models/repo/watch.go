@@ -133,17 +133,6 @@ func WatchRepo(ctx context.Context, userID, repoID int64, doWatch bool) (err err
 	return err
 }
 
-// GetWatchers returns all watchers of given repository.
-func GetWatchers(ctx context.Context, repoID int64) ([]*Watch, error) {
-	watches := make([]*Watch, 0, 10)
-	return watches, db.GetEngine(ctx).Where("`watch`.repo_id=?", repoID).
-		And("`watch`.mode<>?", WatchModeDont).
-		And("`user`.is_active=?", true).
-		And("`user`.prohibit_login=?", false).
-		Join("INNER", "`user`", "`user`.id = `watch`.user_id").
-		Find(&watches)
-}
-
 // GetWatchersExcludeBlocked returns all watchers of given repository, whereby
 // the doer isn't blocked by one of the watchers.
 func GetWatchersExcludeBlocked(ctx context.Context, repoID, doerID int64) ([]*Watch, error) {
