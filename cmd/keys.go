@@ -17,7 +17,7 @@ import (
 // CmdKeys represents the available keys sub-command
 var CmdKeys = &cli.Command{
 	Name:   "keys",
-	Usage:  "This command queries the Gitea database to get the authorized command for a given ssh key fingerprint",
+	Usage:  "This command queries the Forgejo database to get the authorized command for a given ssh key fingerprint",
 	Before: PrepareConsoleLoggerLevel(log.FATAL),
 	Action: runKeys,
 	Flags: []cli.Flag{
