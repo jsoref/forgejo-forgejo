@@ -159,6 +159,7 @@ func testLinksAsUser(userName string, t *testing.T) {
 		"/releases/new",
 		//"/wiki/_pages",
 		"/wiki/?action=_new",
+		"/activity",
 	}
 
 	for _, repo := range apiRepos {
@@ -173,4 +174,66 @@ func TestLinksLogin(t *testing.T) {
 	defer tests.PrepareTestEnv(t)()
 
 	testLinksAsUser("user2", t)
+}
+
+func TestRedirectsWebhooks(t *testing.T) {
+	defer tests.PrepareTestEnv(t)()
+
+	//
+	// A redirect means the route exists but not if it performs as intended.
+	//
+	for _, kind := range []string{"forgejo", "gitea"} {
+		redirects := []struct {
+			from string
+			to   string
+			verb string
+		}{
+			{from: "/user2/repo1/settings/hooks/" + kind + "/new", to: "/user/login", verb: "GET"},
+			{from: "/user/settings/hooks/" + kind + "/new", to: "/user/login", verb: "GET"},
+			{from: "/admin/system-hooks/" + kind + "/new", to: "/user/login", verb: "GET"},
+			{from: "/admin/default-hooks/" + kind + "/new", to: "/user/login", verb: "GET"},
+			{from: "/user2/repo1/settings/hooks/" + kind + "/new", to: "/", verb: "POST"},
+			{from: "/admin/system-hooks/" + kind + "/new", to: "/", verb: "POST"},
+			{from: "/admin/default-hooks/" + kind + "/new", to: "/", verb: "POST"},
+			{from: "/user2/repo1/settings/hooks/" + kind + "/1", to: "/", verb: "POST"},
+			{from: "/admin/hooks/" + kind + "/1", to: "/", verb: "POST"},
+		}
+		for _, info := range redirects {
+			req := NewRequest(t, info.verb, info.from)
+			resp := MakeRequest(t, req, http.StatusSeeOther)
+			assert.EqualValues(t, path.Join(setting.AppSubURL, info.to), test.RedirectURL(resp), info.from)
+		}
+	}
+}
+
+func TestRepoLinks(t *testing.T) {
+	defer tests.PrepareTestEnv(t)()
+
+	// repo1 has enabled almost features, so we can test most links
+	repoLink := "/user2/repo1"
+	links := []string{
+		"/actions",
+		"/packages",
+		"/projects",
+	}
+
+	// anonymous user
+	for _, link := range links {
+		req := NewRequest(t, "GET", repoLink+link)
+		MakeRequest(t, req, http.StatusOK)
+	}
+
+	// admin/owner user
+	session := loginUser(t, "user1")
+	for _, link := range links {
+		req := NewRequest(t, "GET", repoLink+link)
+		session.MakeRequest(t, req, http.StatusOK)
+	}
+
+	// non-admin non-owner user
+	session = loginUser(t, "user2")
+	for _, link := range links {
+		req := NewRequest(t, "GET", repoLink+link)
+		session.MakeRequest(t, req, http.StatusOK)
+	}
 }
