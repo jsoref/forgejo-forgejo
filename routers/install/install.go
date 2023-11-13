@@ -358,6 +358,12 @@ func SubmitInstall(ctx *context.Context) {
 			ctx.RenderWithErr(ctx.Tr("form.password_not_match"), tplInstall, form)
 			return
 		}
+		if len(form.AdminPasswd) < setting.MinPasswordLength {
+			ctx.Data["Err_Admin"] = true
+			ctx.Data["Err_AdminPasswd"] = true
+			ctx.RenderWithErr(ctx.Tr("auth.password_too_short", setting.MinPasswordLength), tplInstall, form)
+			return
+		}
 	}
 
 	// Init the engine with migration
@@ -547,18 +553,13 @@ func SubmitInstall(ctx *context.Context) {
 			u, _ = user_model.GetUserByName(ctx, u.Name)
 		}
 
-		days := 86400 * setting.LogInRememberDays
-		ctx.SetSiteCookie(setting.CookieUserName, u.Name, days)
-
-		ctx.SetSuperSecureCookie(base.EncodeMD5(u.Rands+u.Passwd),
-			setting.CookieRememberName, u.Name, days)
-
-		// Auto-login for admin
-		if err = ctx.Session.Set("uid", u.ID); err != nil {
+		if err := ctx.SetLTACookie(u); err != nil {
 			ctx.RenderWithErr(ctx.Tr("install.save_config_failed", err), tplInstall, &form)
 			return
 		}
-		if err = ctx.Session.Set("uname", u.Name); err != nil {
+
+		// Auto-login for admin
+		if err = ctx.Session.Set("uid", u.ID); err != nil {
 			ctx.RenderWithErr(ctx.Tr("install.save_config_failed", err), tplInstall, &form)
 			return
 		}

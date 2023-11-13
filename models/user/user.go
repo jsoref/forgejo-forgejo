@@ -223,6 +223,12 @@ func GetAllUsers(ctx context.Context) ([]*User, error) {
 	return users, db.GetEngine(ctx).OrderBy("id").Where("type = ?", UserTypeIndividual).Find(&users)
 }
 
+// GetAllAdmins returns a slice of all adminusers found in DB.
+func GetAllAdmins(ctx context.Context) ([]*User, error) {
+	users := make([]*User, 0)
+	return users, db.GetEngine(ctx).OrderBy("id").Where("type = ?", UserTypeIndividual).And("is_admin = ?", true).Find(&users)
+}
+
 // IsLocal returns true if user login type is LoginPlain.
 func (u *User) IsLocal() bool {
 	return u.LoginType <= auth.Plain
@@ -378,6 +384,11 @@ func (u *User) SetPassword(passwd string) (err error) {
 		u.Salt = ""
 		u.PasswdHashAlgo = ""
 		return nil
+	}
+
+	// Invalidate all authentication tokens for this user.
+	if err := auth.DeleteAuthTokenByUser(db.DefaultContext, u.ID); err != nil {
+		return err
 	}
 
 	if u.Salt, err = GetUserSalt(); err != nil {
